@@ -5,18 +5,7 @@ const Home = () => {
   return (
     <motion.div
       transition={{ duration: 1 }}
-      //   animate={{
-      //     x: 100,
-      //     y: 200,
-      //     transition: {
-      //       duration: 1,
-      //       x: { type: "spring", damping: 10, stiffness: 100 },
-      //       y: { type: "spring", damping: 10, stiffness: 100 },
-      //     },
-      //     ease: "easeInOut",
-      //     repeat: Infinity,
-      //     repeatType: "reverse",
-      //   }}
+     
       drag="y"
       dragConstraints={{
         left: 500,
