@@ -24,7 +24,7 @@ const Home = () => {
       }}
       className="flex items-center justify-center h-screen "
     >
-      <div className="bg-primary min-w-5xl h-120 rounded-2xl flex justify-center items-center text-6  xl text-primary-content">
+      <div className="bg-primary min-w-5xl h-120 rounded-2xl flex  justify-center items-center text-lg text-primary-content">
         Home{" "}
         <motion.button
           whileHover={{ scale: 1.1 }}
@@ -40,13 +40,6 @@ const Home = () => {
         >
           click
         </motion.button>
-      </div>
-      <div className="aura">
-        <div className="card bg-base-100">
-          <div className="card-body">
-            <p>This card has aura</p>
-          </div>
-        </div>
       </div>
     </motion.div>
   );
