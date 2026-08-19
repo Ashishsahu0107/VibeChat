@@ -1,62 +1,99 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FiMic, FiMicOff, FiVideo, FiVideoOff } from 'react-icons/fi';
-import Peer from 'simple-peer/simplepeer.min.js';
 import { useSocket } from '../../context/SocketContext';
+import toast from 'react-hot-toast';
 
 const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, isReceiving, calleeId, calleeName }) => {
   const [stream, setStream] = useState(null);
   const [callAccepted, setCallAccepted] = useState(isReceiving);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(!isReceiving);
+  const [callError, setCallError] = useState(null);
   
   const { socket } = useSocket();
-  const myVideo = useRef();
-  const userVideo = useRef();
-  const connectionRef = useRef();
+  const myVideo = useRef(null);
+  const userVideo = useRef(null);
+  const peerRef = useRef(null);
+  const streamRef = useRef(null);
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((currentStream) => {
-      setStream(currentStream);
-      if (myVideo.current) {
-        myVideo.current.srcObject = currentStream;
-      }
-      
-      if (isReceiving) {
-        // Answer Call
-        const peer = new Peer({ initiator: false, trickle: false, stream: currentStream });
-        peer.on("signal", (data) => {
-          socket.emit("answer-call", { signal: data, to: callerId });
+    const initCall = async () => {
+      try {
+        const currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        setStream(currentStream);
+        streamRef.current = currentStream;
+        
+        if (myVideo.current) {
+          myVideo.current.srcObject = currentStream;
+        }
+
+        const peer = new RTCPeerConnection({
+          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         });
-        peer.on("stream", (userStream) => {
-          if (userVideo.current) userVideo.current.srcObject = userStream;
+        peerRef.current = peer;
+
+        currentStream.getTracks().forEach(track => {
+          peer.addTrack(track, currentStream);
         });
-        peer.signal(callerSignal);
-        connectionRef.current = peer;
-      } else {
-        // Initiate Call
-        const peer = new Peer({ initiator: true, trickle: false, stream: currentStream });
-        peer.on("signal", (data) => {
+
+        peer.ontrack = (event) => {
+          if (userVideo.current) {
+            userVideo.current.srcObject = event.streams[0];
+          }
+        };
+
+        peer.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.emit("ice-candidate", {
+              to: isReceiving ? callerId : calleeId,
+              candidate: event.candidate
+            });
+          }
+        };
+
+        if (isReceiving) {
+          await peer.setRemoteDescription(new RTCSessionDescription(callerSignal));
+          const answer = await peer.createAnswer();
+          await peer.setLocalDescription(answer);
+          socket.emit("answer-call", { signal: answer, to: callerId });
+          setIsConnecting(false);
+        } else {
+          const offer = await peer.createOffer();
+          await peer.setLocalDescription(offer);
           socket.emit("call-user", {
             userToCall: calleeId,
-            signalData: data,
+            signalData: offer,
             from: authUser._id,
             name: authUser.fullName,
             isVideoCall: true
           });
-        });
-        peer.on("stream", (userStream) => {
-          if (userVideo.current) userVideo.current.srcObject = userStream;
-        });
-        socket.on("call-accepted", (signal) => {
-          setCallAccepted(true);
-          peer.signal(signal);
-        });
-        connectionRef.current = peer;
+        }
+      } catch (err) {
+        console.error("Error accessing media devices.", err);
+        setCallError("Camera or Microphone access denied/unavailable.");
+        toast.error("Permissions denied. Check your camera/mic.");
       }
-    }).catch(err => {
-      console.error(err);
-      alert("Failed to access camera/microphone.");
-      onEndCall();
+    };
+
+    initCall();
+
+    socket.on("call-accepted", async (signal) => {
+      setCallAccepted(true);
+      setIsConnecting(false);
+      if (peerRef.current && !peerRef.current.currentRemoteDescription) {
+        await peerRef.current.setRemoteDescription(new RTCSessionDescription(signal));
+      }
+    });
+
+    socket.on("ice-candidate", async (candidate) => {
+      if (peerRef.current) {
+        try {
+          await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (e) {
+          console.error("Error adding received ice candidate", e);
+        }
+      }
     });
 
     socket.on("call-ended", () => {
@@ -64,13 +101,21 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
     });
 
     return () => {
+      socket.off("call-accepted");
+      socket.off("ice-candidate");
+      socket.off("call-ended");
       endCall();
     };
   }, []);
 
   const endCall = () => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    if (connectionRef.current) connectionRef.current.destroy();
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    if (peerRef.current) {
+      peerRef.current.close();
+      peerRef.current = null;
+    }
     onEndCall();
   };
 
@@ -97,9 +142,15 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
     <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
       <div className="relative w-full h-full max-w-6xl mx-auto flex flex-col p-4">
         
-        {/* Remote Video */}
+        {/* Remote Video or Error */}
         <div className="flex-1 w-full relative bg-base-300 rounded-3xl overflow-hidden shadow-2xl">
-          {callAccepted ? (
+          {callError ? (
+             <div className="w-full h-full flex flex-col items-center justify-center text-error bg-error/10">
+               <FiVideoOff size={64} className="mb-4" />
+               <h2 className="text-2xl font-bold">{callError}</h2>
+               <p className="mt-2 text-base-content/70">Check browser permissions or ensure a camera/mic is connected.</p>
+             </div>
+          ) : callAccepted ? (
             <video playsInline ref={userVideo} autoPlay className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-white">
@@ -108,7 +159,9 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
                   <img src={`https://ui-avatars.com/api/?name=${calleeName}&background=random`} alt="User" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold animate-pulse">Calling {calleeName}...</h2>
+              <h2 className="text-2xl font-bold animate-pulse">
+                {isConnecting ? `Connecting to ${calleeName}...` : `Calling ${calleeName}...`}
+              </h2>
             </div>
           )}
         </div>
