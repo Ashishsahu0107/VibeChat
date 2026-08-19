@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 
 const useAuthStore = create((set) => ({
-  authUser: JSON.parse(localStorage.getItem('authUser')) || null,
+  authUser: JSON.parse(sessionStorage.getItem('authUser')) || null,
 
   setAuthUser: (user) => {
     if (user) {
-      localStorage.setItem('authUser', JSON.stringify(user));
+      sessionStorage.setItem('authUser', JSON.stringify(user));
     } else {
-      localStorage.removeItem('authUser');
+      sessionStorage.removeItem('authUser');
     }
     set({ authUser: user });
   },
@@ -16,7 +16,7 @@ const useAuthStore = create((set) => ({
     try {
       // Assuming you have a config/api.js
       // await api.post("/auth/logout");
-      localStorage.removeItem('authUser');
+      sessionStorage.removeItem('authUser');
       set({ authUser: null });
     } catch (error) {
       console.error("Logout failed:", error);

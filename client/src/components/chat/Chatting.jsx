@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiSend, FiImage, FiMoreVertical, FiPhone, FiVideo } from "react-icons/fi";
+import { FiSend, FiImage, FiMoreVertical, FiPhone, FiVideo, FiSmile } from "react-icons/fi";
+import EmojiPicker from "emoji-picker-react";
 import api from "../../config/api";
 import useAuthStore from "../../store/useAuthStore";
 import toast from "react-hot-toast";
@@ -7,6 +8,7 @@ import toast from "react-hot-toast";
 const Chatting = ({ selectedUser }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const { authUser } = useAuthStore();
   const messagesEndRef = useRef(null);
 
@@ -16,9 +18,16 @@ const Chatting = ({ selectedUser }) => {
     const fetchMessages = async () => {
       try {
         if (!selectedUser) return;
-        const res = await api.get(`/messages/${selectedUser._id}`);
+        // Adding a timestamp to prevent browser caching of the GET request
+        const res = await api.get(`/messages/${selectedUser._id}?t=${new Date().getTime()}`);
         if (isMounted) {
-          setMessages(res.data);
+          setMessages((prevMessages) => {
+            // Only update state if the messages actually changed to prevent excessive re-renders and auto-scrolling
+            if (prevMessages.length !== res.data.length) {
+              return res.data;
+            }
+            return prevMessages; // Keep the same reference if no new messages
+          });
         }
       } catch (error) {
         console.error("Failed to fetch messages:", error);
@@ -28,10 +37,10 @@ const Chatting = ({ selectedUser }) => {
     // Initial fetch
     fetchMessages();
 
-    // Set up polling
+    // Set up polling (Short Polling)
     let intervalId;
     if (selectedUser) {
-      intervalId = setInterval(fetchMessages, 2000); // Poll every 2 seconds
+      intervalId = setInterval(fetchMessages, 200); // Poll every 2 seconds
     }
 
     return () => {
@@ -40,9 +49,22 @@ const Chatting = ({ selectedUser }) => {
     };
   }, [selectedUser]);
 
-  // Auto-scroll to bottom whenever messages update
+  const chatContainerRef = useRef(null);
+  const isScrolledUpRef = useRef(false);
+
+  const handleScroll = () => {
+    if (chatContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+      // Check if user has scrolled up more than 150px from bottom
+      isScrolledUpRef.current = scrollHeight - scrollTop - clientHeight > 150;
+    }
+  };
+
+  // Auto-scroll to bottom whenever messages update, ONLY if user is at the bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!isScrolledUpRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   const handleSend = async (e) => {
@@ -96,25 +118,45 @@ const Chatting = ({ selectedUser }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-base-200/30">
+      <div 
+        className="flex-1 overflow-y-auto p-6 space-y-6 bg-base-200/30"
+        ref={chatContainerRef}
+        onScroll={handleScroll}
+      >
         {messages.map((chat, idx) => {
           const senderId = chat.senderId || chat.sender;
           const isMe = String(senderId) === String(authUser._id);
           const timeString = new Date(chat.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           return (
-            <div key={chat._id || idx} className={`chat ${isMe ? "chat-end" : "chat-start"}`}>
-              <div className="chat-image avatar">
-                <div className="w-10 rounded-full">
-                  <img alt="avatar" src={isMe ? (authUser.profilePic || `https://ui-avatars.com/api/?name=${authUser.fullName}&background=random`) : (selectedUser.profilePic || selectedUser.image || `https://ui-avatars.com/api/?name=${selectedUser.fullName}&background=random`)} />
+            <div key={chat._id || idx} className={`flex w-full ${isMe ? "justify-end" : "justify-start"} gap-3`}>
+              {/* Receiver Avatar (Left) */}
+              {!isMe && (
+                <div className="avatar self-end">
+                  <div className="w-10 rounded-full">
+                    <img alt="avatar" src={selectedUser.profilePic || selectedUser.image || `https://ui-avatars.com/api/?name=${selectedUser.fullName}&background=random`} />
+                  </div>
+                </div>
+              )}
+
+              {/* Message Content */}
+              <div className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                <div className="text-xs opacity-50 mb-1 flex items-center gap-2">
+                  {isMe ? "Me" : selectedUser.fullName}
+                  <time className="text-xs opacity-75">{timeString}</time>
+                </div>
+                <div className={`px-4 py-2 rounded-2xl shadow-sm max-w-md break-words ${isMe ? "bg-primary text-primary-content rounded-br-none" : "bg-base-300 text-base-content rounded-bl-none"}`}>
+                  {chat.message}
                 </div>
               </div>
-              <div className="chat-header text-xs opacity-50 mb-1">
-                {isMe ? "Me" : selectedUser.fullName}
-                <time className="text-xs opacity-50 ml-2">{timeString}</time>
-              </div>
-              <div className={`chat-bubble ${isMe ? "chat-bubble-primary" : "chat-bubble-base-200"} shadow-sm`}>
-                {chat.message}
-              </div>
+
+              {/* Sender Avatar (Right) */}
+              {isMe && (
+                <div className="avatar self-end">
+                  <div className="w-10 rounded-full">
+                    <img alt="avatar" src={authUser.profilePic || `https://ui-avatars.com/api/?name=${authUser.fullName}&background=random`} />
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
@@ -122,8 +164,23 @@ const Chatting = ({ selectedUser }) => {
       </div>
 
       {/* Message Input */}
-      <div className="p-4 bg-base-100 border-t border-base-300">
+      <div className="p-4 bg-base-100 border-t border-base-300 relative">
+        {showEmojiPicker && (
+          <div className="absolute bottom-20 left-4 z-50 shadow-2xl">
+            <EmojiPicker 
+              onEmojiClick={(emojiData) => setMessage((prev) => prev + emojiData.emoji)} 
+              theme="auto"
+            />
+          </div>
+        )}
         <form onSubmit={handleSend} className="flex items-center gap-2 max-w-4xl mx-auto">
+          <button 
+            type="button" 
+            className={`btn btn-circle btn-ghost ${showEmojiPicker ? 'text-primary' : 'text-base-content/50'}`}
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          >
+            <FiSmile size={24} />
+          </button>
           <button type="button" className="btn btn-circle btn-ghost text-base-content/50">
             <FiImage size={24} />
           </button>
