@@ -21,7 +21,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (authUser) {
-      const newSocket = io("http://localhost:5000");
+      const newSocket = io("http://localhost:4500");
       setSocket(newSocket);
 
       newSocket.on("connect", () => {
