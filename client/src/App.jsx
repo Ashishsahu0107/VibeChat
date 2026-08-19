@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { Toaster } from "react-hot-toast";
 import useAuthStore from "./store/useAuthStore";
+import IncomingCallModal from "./components/chat/IncomingCallModal";
 
 const App = () => {
   const authUser = useAuthStore((state) => state.authUser);
@@ -22,6 +23,7 @@ const App = () => {
         <Route path="/login" element={!authUser ? <Login/> : <Navigate to="/chat" />}/>
         <Route path="/register" element={!authUser ? <Register/> : <Navigate to="/chat" />}/>
       </Routes>
+      <IncomingCallModal />
       <Toaster position="top-center" />
     </BrowserRouter>
   );
