@@ -6,6 +6,8 @@ import connectDB from "./src/config/db.js";
 import authRouter from "./src/routes/authRouter.js";
 import userRouter from "./src/routes/userRouter.js";
 import messageRouter from "./src/routes/messageRouter.js";
+import http from "http";
+import { initSocket } from "./src/socket/socket.js";
 
 dotenv.config();
 
@@ -32,7 +34,10 @@ app.get("/", (req, res) => {
   res.json({ message: "This main route" });
 });
 
-app.listen(port, () => {
+const server = http.createServer(app);
+const io = initSocket(server);
+
+server.listen(port, () => {
   connectDB();
-  console.log(`server is running on port ${port}`);
-})
+  console.log(`Server is running on port ${port}`);
+});
