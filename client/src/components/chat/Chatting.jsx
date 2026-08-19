@@ -4,11 +4,14 @@ import EmojiPicker from "emoji-picker-react";
 import api from "../../config/api";
 import useAuthStore from "../../store/useAuthStore";
 import toast from "react-hot-toast";
+import VideoCall from "./VideoCall";
+import AudioCall from "./AudioCall";
 
 const Chatting = ({ selectedUser }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [callType, setCallType] = useState(null); // 'video' | 'audio' | null
   const { authUser } = useAuthStore();
   const messagesEndRef = useRef(null);
 
@@ -112,11 +115,31 @@ const Chatting = ({ selectedUser }) => {
           </div>
         </div>
         <div className="flex items-center gap-4 text-base-content/70">
-          <button className="btn btn-ghost btn-circle btn-sm"><FiPhone size={20} /></button>
-          <button className="btn btn-ghost btn-circle btn-sm"><FiVideo size={20} /></button>
+          <button onClick={() => setCallType('audio')} className="btn btn-ghost btn-circle btn-sm"><FiPhone size={20} /></button>
+          <button onClick={() => setCallType('video')} className="btn btn-ghost btn-circle btn-sm"><FiVideo size={20} /></button>
           <button className="btn btn-ghost btn-circle btn-sm"><FiMoreVertical size={20} /></button>
         </div>
       </div>
+
+      {callType === 'video' && (
+        <VideoCall 
+          authUser={authUser} 
+          calleeId={selectedUser._id} 
+          calleeName={selectedUser.fullName}
+          onEndCall={() => setCallType(null)} 
+          isReceiving={false}
+        />
+      )}
+      
+      {callType === 'audio' && (
+        <AudioCall 
+          authUser={authUser} 
+          calleeId={selectedUser._id} 
+          calleeName={selectedUser.fullName}
+          onEndCall={() => setCallType(null)} 
+          isReceiving={false}
+        />
+      )}
 
       <div 
         className="flex-1 overflow-y-auto p-6 space-y-6 bg-base-200/30"
