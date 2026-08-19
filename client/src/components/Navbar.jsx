@@ -48,7 +48,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/recentchat" className="text-base-content/80 hover:text-primary transition-colors font-medium">Chats</Link>
+            <Link to="/chat" className="text-base-content/80 hover:text-primary transition-colors font-medium">Chats</Link>
             <Link to="/contact" className="text-base-content/80 hover:text-primary transition-colors font-medium">Contact</Link>
             
             <div className="flex items-center gap-4 border-l border-base-content/20 pl-6">
@@ -61,7 +61,12 @@ const Navbar = () => {
                   <option key={theme} value={theme}>{theme.charAt(0).toUpperCase() + theme.slice(1)}</option>
                 ))}
               </select>
-              {!authUser && (
+              {authUser ? (
+                <>
+                  <Link to="/settings" className="btn btn-ghost btn-sm">Settings</Link>
+                  <button onClick={useAuthStore.getState().logout} className="btn btn-error btn-sm text-white">Logout</button>
+                </>
+              ) : (
                 <>
                   <Link to="/login" className="btn btn-ghost btn-sm">Login</Link>
                   <Link to="/register" className="btn btn-primary btn-sm">Sign Up</Link>

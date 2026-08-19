@@ -6,6 +6,7 @@ import Contact from "./pages/Contact";
 import Chat from "./pages/Chat";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Settings from "./pages/Settings";
 import { Toaster } from "react-hot-toast";
 import useAuthStore from "./store/useAuthStore";
 import IncomingCallModal from "./components/chat/IncomingCallModal";
@@ -19,6 +20,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/contact" element={<Contact/>}/>
+        <Route path="/settings" element={authUser ? <Settings/> : <Navigate to="/login" />}/>
         <Route path="/chat" element={authUser ? <Chat/> : <Navigate to="/login" />}/>
         <Route path="/login" element={!authUser ? <Login/> : <Navigate to="/chat" />}/>
         <Route path="/register" element={!authUser ? <Register/> : <Navigate to="/chat" />}/>

@@ -115,9 +115,9 @@ const Chatting = ({ selectedUser }) => {
           </div>
         </div>
         <div className="flex items-center gap-4 text-base-content/70">
-          <button onClick={() => setCallType('audio')} className="btn btn-ghost btn-circle btn-sm"><FiPhone size={20} /></button>
-          <button onClick={() => setCallType('video')} className="btn btn-ghost btn-circle btn-sm"><FiVideo size={20} /></button>
-          <button className="btn btn-ghost btn-circle btn-sm"><FiMoreVertical size={20} /></button>
+          <button type="button" onClick={() => setCallType('audio')} className="btn btn-ghost btn-circle btn-sm"><FiPhone size={20} /></button>
+          <button type="button" onClick={() => setCallType('video')} className="btn btn-ghost btn-circle btn-sm"><FiVideo size={20} /></button>
+          <button type="button" className="btn btn-ghost btn-circle btn-sm"><FiMoreVertical size={20} /></button>
         </div>
       </div>
 
