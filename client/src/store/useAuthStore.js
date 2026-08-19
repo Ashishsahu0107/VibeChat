@@ -14,12 +14,40 @@ const useAuthStore = create((set) => ({
 
   logout: async () => {
     try {
-      // Assuming you have a config/api.js
-      // await api.post("/auth/logout");
       sessionStorage.removeItem('authUser');
       set({ authUser: null });
     } catch (error) {
       console.error("Logout failed:", error);
+    }
+  },
+
+  updateProfile: async (data) => {
+    try {
+      const api = (await import("../config/api")).default;
+      const res = await api.put("/users/profile", data);
+      const updatedUser = res.data;
+      sessionStorage.setItem('authUser', JSON.stringify(updatedUser));
+      set({ authUser: updatedUser });
+      return { success: true };
+    } catch (error) {
+      console.error("Update profile failed:", error);
+      return { success: false, error: error.response?.data?.error || "Error updating profile" };
+    }
+  },
+
+  updateProfileImage: async (formData) => {
+    try {
+      const api = (await import("../config/api")).default;
+      const res = await api.post("/users/profile/image", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      const updatedUser = res.data;
+      sessionStorage.setItem('authUser', JSON.stringify(updatedUser));
+      set({ authUser: updatedUser });
+      return { success: true };
+    } catch (error) {
+      console.error("Upload image failed:", error);
+      return { success: false, error: error.response?.data?.error || "Error uploading image" };
     }
   }
 }));

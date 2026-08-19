@@ -31,6 +31,13 @@ export const initSocket = (server) => {
       }
     });
 
+    socket.on("ice-candidate", (data) => {
+      const socketId = userSocketMap[data.to];
+      if (socketId) {
+        io.to(socketId).emit("ice-candidate", data.candidate);
+      }
+    });
+
     socket.on("end-call", ({ to }) => {
       const socketId = userSocketMap[to];
       if (socketId) {

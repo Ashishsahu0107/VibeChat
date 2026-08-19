@@ -15,9 +15,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    image: {
+    phone: {
       type: String,
-      required: true,
+      default: "",
     },
     createdAt: {
       type: Date,
