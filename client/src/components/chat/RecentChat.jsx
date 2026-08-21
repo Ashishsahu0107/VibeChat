@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { FiSearch, FiMenu, FiLogOut } from "react-icons/fi";
 import useAuthStore from "../../store/useAuthStore";
 import api from "../../config/api";
+import { useSocket } from "../../context/SocketContext";
 
 const RecentChat = ({ selectedUser, onSelectUser, isCollapsed, setIsCollapsed }) => {
   const [search, setSearch] = useState("");
   const { authUser, logout } = useAuthStore();
+  const { onlineUsers } = useSocket();
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -81,8 +83,10 @@ const RecentChat = ({ selectedUser, onSelectUser, isCollapsed, setIsCollapsed })
                   />
                 </div>
               </div>
-              {/* Fake online status indicator */}
-              <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-base-100 rounded-full ${selectedUser?._id === user._id ? 'bg-green-300' : 'bg-success'}`}></span>
+              {/* Online status indicator */}
+              {onlineUsers.includes(user._id) && (
+                <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-base-100 rounded-full ${selectedUser?._id === user._id ? 'bg-green-300' : 'bg-success'}`}></span>
+              )}
             </div>
             
             {!isCollapsed && (

@@ -3,6 +3,7 @@ import { FiSend, FiImage, FiMoreVertical, FiPhone, FiVideo, FiSmile } from "reac
 import EmojiPicker from "emoji-picker-react";
 import api from "../../config/api";
 import useAuthStore from "../../store/useAuthStore";
+import { useSocket } from "../../context/SocketContext";
 import toast from "react-hot-toast";
 import VideoCall from "./VideoCall";
 import AudioCall from "./AudioCall";
@@ -13,6 +14,7 @@ const Chatting = ({ selectedUser }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [callType, setCallType] = useState(null); // 'video' | 'audio' | null
   const { authUser } = useAuthStore();
+  const { onlineUsers } = useSocket();
   const messagesEndRef = useRef(null);
 
   // Fetch messages when a user is selected
@@ -111,7 +113,9 @@ const Chatting = ({ selectedUser }) => {
           </div>
           <div>
             <h3 className="font-bold text-lg text-base-content capitalize">{selectedUser.fullName}</h3>
-            <p className="text-sm text-success">Online</p>
+            <p className={`text-sm ${onlineUsers.includes(selectedUser._id) ? 'text-success' : 'text-base-content/50'}`}>
+              {onlineUsers.includes(selectedUser._id) ? 'Online' : 'Offline'}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-4 text-base-content/70">

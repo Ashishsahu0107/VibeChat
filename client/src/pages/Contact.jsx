@@ -18,15 +18,23 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    toast.success("Form submitted successfully!");
-
+    
     try {
-      const res = await api.get("/auth/contact", formData);
-      toast.success(res.data.message);
-
+      setLoading(true);
+      const res = await api.post("/public/contact", formData);
+      toast.success(res.data.message || "Form submitted successfully!");
+      
+      // Clear fields after successful submission
+      setFormData({
+        name: "",
+        email: "",
+        message: "",
+      });
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      toast.error(error.response?.data?.error || "Failed to submit form");
+    } finally {
+      setLoading(false);
     }
   };
 
