@@ -38,9 +38,7 @@ const useAuthStore = create((set) => ({
   updateProfileImage: async (formData) => {
     try {
       const api = (await import("../config/api")).default;
-      const res = await api.post("/users/profile/image", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      const res = await api.post("/users/profile/image", formData);
       const updatedUser = res.data;
       sessionStorage.setItem('authUser', JSON.stringify(updatedUser));
       set({ authUser: updatedUser });

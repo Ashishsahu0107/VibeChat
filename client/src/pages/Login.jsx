@@ -5,6 +5,8 @@ import { FiMail, FiLock, FiEyeOff, FiEye } from "react-icons/fi";
 import toast from "react-hot-toast";
 import api from "../config/api";
 import useAuthStore from "../store/useAuthStore";
+import { useGoogleAuth } from "../config/GoogleAuth";
+
 const Login = () => {
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const [showPassword, setShowPassword] = useState(false);
@@ -13,12 +15,40 @@ const Login = () => {
     password: "",
   });
 
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const { isLoading, error, isInitialized, signInWithGoogle } = useGoogleAuth();
+
+  const handleGoogleSuccess = async (userData) => {
+    console.log("Google Login Data", userData);
+    setLoading(true);
+    try {
+      const res = await api.post("/auth/googleLogin", userData);
+
+      toast.success(res.data.message);
+      setAuthUser(res.data);
+      setFormData({ email: "", password: "" });
+      navigate("/chat");
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const GoogleLogin = () => {
+    signInWithGoogle(handleGoogleSuccess, handleGoogleFailure);
+  };
+
+  const handleGoogleFailure = (error) => {
+    console.error("Google login failed:", error);
+    toast.error("Google login failed. Please try again.");
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -112,7 +142,7 @@ const Login = () => {
 
           <div className="divider text-base-content/50">OR</div>
 
-          <button className="btn btn-outline w-full mb-4">
+          <button className="btn btn-outline w-full mb-4" onClick={GoogleLogin}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 48 48"
