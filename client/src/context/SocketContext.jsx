@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { io } from 'socket.io-client';
-import useAuthStore from '../store/useAuthStore';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
+import { io } from "socket.io-client";
+import useAuthStore from "../store/useAuthStore";
 
 const SocketContext = createContext();
 
@@ -11,7 +17,8 @@ export const useSocket = () => {
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const { authUser } = useAuthStore();
-  
+  const [onlineUsers, setOnlineUsers] = useState([]);
+
   // Call State
   const [receivingCall, setReceivingCall] = useState(false);
   const [callerSignal, setCallerSignal] = useState(null);
@@ -21,11 +28,15 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (authUser) {
-      const newSocket = io("http://localhost:4500");
+      const newSocket = io(`http://${window.location.hostname}:4500`);
       setSocket(newSocket);
 
       newSocket.on("connect", () => {
         newSocket.emit("join-room", authUser._id);
+      });
+
+      newSocket.on("getOnlineUsers", (users) => {
+        setOnlineUsers(users);
       });
 
       newSocket.on("call-incoming", (data) => {
@@ -39,6 +50,11 @@ export const SocketProvider = ({ children }) => {
       return () => {
         newSocket.disconnect();
       };
+    } else {
+      if (socket) {
+        socket.disconnect();
+        setSocket(null);
+      }
     }
   }, [authUser]);
 
@@ -51,15 +67,18 @@ export const SocketProvider = ({ children }) => {
   };
 
   return (
-    <SocketContext.Provider value={{ 
-      socket, 
-      receivingCall, 
-      callerSignal, 
-      callerName, 
-      callerId, 
-      isVideoCall,
-      clearCall
-    }}>
+    <SocketContext.Provider
+      value={{
+        socket,
+        onlineUsers,
+        receivingCall,
+        callerSignal,
+        callerName,
+        callerId,
+        isVideoCall,
+        clearCall,
+      }}
+    >
       {children}
     </SocketContext.Provider>
   );
