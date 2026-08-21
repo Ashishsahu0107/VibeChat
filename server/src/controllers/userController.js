@@ -85,6 +85,6 @@ export const uploadProfileImage = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in uploadProfileImage:", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", details: error.message });
   }
 };
