@@ -43,6 +43,23 @@ export const getMessages = async (req, res) => {
   }
 };
 
+export const deleteMessages = async (req, res) => {
+  try {
+    const { messageIds } = req.body;
+    const senderId = req.user._id;
 
+    if (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0) {
+      return res.status(400).json({ error: "Message IDs are required" });
+    }
 
+    await Message.deleteMany({
+      _id: { $in: messageIds },
+      $or: [{ senderId: senderId }, { receiverId: senderId }]
+    });
 
+    return res.status(200).json({ message: "Messages deleted successfully" });
+  } catch (err) {
+    console.log("Error in deleteMessages controller: ", err.message);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};

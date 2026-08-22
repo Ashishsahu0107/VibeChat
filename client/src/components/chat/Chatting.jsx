@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiSend, FiImage, FiMoreVertical, FiPhone, FiVideo, FiSmile } from "react-icons/fi";
+import { FiSend, FiImage, FiMoreVertical, FiPhone, FiVideo, FiSmile, FiTrash2, FiCheckSquare, FiX } from "react-icons/fi";
 import EmojiPicker from "emoji-picker-react";
 import api from "../../config/api";
 import useAuthStore from "../../store/useAuthStore";
@@ -13,6 +13,8 @@ const Chatting = ({ selectedUser }) => {
   const [messages, setMessages] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [callType, setCallType] = useState(null); // 'video' | 'audio' | null
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedMessages, setSelectedMessages] = useState([]);
   const { authUser } = useAuthStore();
   const { onlineUsers } = useSocket();
   const messagesEndRef = useRef(null);
@@ -101,6 +103,28 @@ const Chatting = ({ selectedUser }) => {
     );
   }
 
+  const toggleMessageSelection = (id) => {
+    setSelectedMessages(prev => 
+      prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelectedMessages = async () => {
+    if (selectedMessages.length === 0) return;
+    if (window.confirm(`Are you sure you want to delete ${selectedMessages.length} message(s)?`)) {
+      try {
+        await api.post(`/messages/delete/messages`, { messageIds: selectedMessages });
+        setMessages(messages.filter(m => !selectedMessages.includes(m._id)));
+        setSelectedMessages([]);
+        setIsSelectionMode(false);
+        toast.success("Messages deleted successfully");
+      } catch (error) {
+        console.error("Failed to delete messages:", error);
+        toast.error("Failed to delete messages");
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col h-full w-full bg-base-100">
       {/* Header */}
@@ -118,11 +142,34 @@ const Chatting = ({ selectedUser }) => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4 text-base-content/70">
-          <button type="button" onClick={() => setCallType('audio')} className="btn btn-ghost btn-circle btn-sm"><FiPhone size={20} /></button>
-          <button type="button" onClick={() => setCallType('video')} className="btn btn-ghost btn-circle btn-sm"><FiVideo size={20} /></button>
-          <button type="button" className="btn btn-ghost btn-circle btn-sm"><FiMoreVertical size={20} /></button>
-        </div>
+        
+        {isSelectionMode ? (
+          <div className="flex items-center gap-2 text-base-content/70">
+            <span className="text-sm font-semibold mr-2">{selectedMessages.length} selected</span>
+            <button 
+              type="button" 
+              onClick={handleDeleteSelectedMessages} 
+              className="btn btn-error btn-sm text-white" 
+              disabled={selectedMessages.length === 0}
+            >
+              <FiTrash2 size={16} className="mr-1" /> Delete
+            </button>
+            <button 
+              type="button" 
+              onClick={() => { setIsSelectionMode(false); setSelectedMessages([]); }} 
+              className="btn btn-ghost btn-sm"
+            >
+              <FiX size={20} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4 text-base-content/70">
+            <button type="button" onClick={() => setIsSelectionMode(true)} className="btn btn-ghost btn-circle btn-sm" title="Select Messages"><FiCheckSquare size={20} /></button>
+            <button type="button" onClick={() => setCallType('audio')} className="btn btn-ghost btn-circle btn-sm"><FiPhone size={20} /></button>
+            <button type="button" onClick={() => setCallType('video')} className="btn btn-ghost btn-circle btn-sm"><FiVideo size={20} /></button>
+            <button type="button" className="btn btn-ghost btn-circle btn-sm"><FiMoreVertical size={20} /></button>
+          </div>
+        )}
       </div>
 
       {callType === 'video' && (
@@ -154,8 +201,25 @@ const Chatting = ({ selectedUser }) => {
           const senderId = chat.senderId || chat.sender;
           const isMe = String(senderId) === String(authUser._id);
           const timeString = new Date(chat.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const isSelected = selectedMessages.includes(chat._id);
+          
           return (
-            <div key={chat._id || idx} className={`flex w-full ${isMe ? "justify-end" : "justify-start"} gap-3`}>
+            <div 
+              key={chat._id || idx} 
+              className={`flex w-full ${isMe ? "justify-end" : "justify-start"} gap-3 ${isSelectionMode ? 'cursor-pointer hover:bg-base-200/50 p-2 rounded-xl transition-colors' : ''} ${isSelected ? 'bg-base-200/80' : ''}`}
+              onClick={() => isSelectionMode && chat._id && toggleMessageSelection(chat._id)}
+            >
+              {isSelectionMode && (
+                <div className="flex items-center justify-center mr-2">
+                  <input 
+                    type="checkbox" 
+                    className="checkbox checkbox-primary checkbox-sm" 
+                    checked={isSelected}
+                    readOnly
+                  />
+                </div>
+              )}
+
               {/* Receiver Avatar (Left) */}
               {!isMe && (
                 <div className="avatar self-end">
