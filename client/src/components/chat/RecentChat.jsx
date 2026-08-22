@@ -63,7 +63,7 @@ const RecentChat = ({ selectedUser, onSelectUser, isCollapsed, setIsCollapsed })
           <div
             key={user._id}
             onClick={() => onSelectUser(user)}
-            className={`flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all duration-200 group ${
+            className={`flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all duration-200 group relative ${
               selectedUser?._id === user._id
                 ? "bg-primary text-primary-content shadow-md shadow-primary/20"
                 : "hover:bg-base-200 text-base-content"
