@@ -32,6 +32,20 @@ const useChatStore = create((set, get) => ({
     }
   },
 
+    uploadAttachment: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post("/messages/upload/file", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      return res.data;
+    } catch (error) {
+      console.error("Upload error:", error);
+      throw error;
+    }
+  },
+
   sendMessage: async (content, chatId, attachments = [], replyTo = null) => {
     try {
       const res = await api.post("/messages", {
@@ -98,5 +112,6 @@ const useChatStore = create((set, get) => ({
 }));
 
 export default useChatStore;
+
 
 

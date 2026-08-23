@@ -86,3 +86,35 @@ export const deleteMessage = async (req, res) => {
   }
 };
 
+
+import cloudinary from "../config/cloudinary.js";
+
+export const uploadAttachment = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file provided" });
+    }
+
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
+    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+
+    const uploadResponse = await cloudinary.uploader.upload(dataURI, {
+      resource_type: "auto",
+      folder: "vibechat_attachments",
+    });
+
+    const attachment = {
+      url: uploadResponse.secure_url,
+      type: req.file.mimetype.startsWith("audio/") ? "audio" : 
+            req.file.mimetype.startsWith("video/") ? "video" : 
+            req.file.mimetype.startsWith("image/") ? "image" : "document",
+      name: req.file.originalname,
+      size: req.file.size
+    };
+
+    res.status(200).json(attachment);
+  } catch (error) {
+    console.log("Error in uploadAttachment: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
