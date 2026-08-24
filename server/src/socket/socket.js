@@ -1,7 +1,10 @@
 import { Server } from "socket.io";
 
+let io;
+const userSocketMap = {}; // userId -> socketId
+
 export const initSocket = (server) => {
-  const io = new Server(server, {
+  io = new Server(server, {
     cors: {
       origin: (origin, callback) => callback(null, true),
       credentials: true,
@@ -9,14 +12,20 @@ export const initSocket = (server) => {
     }
   });
 
-  const userSocketMap = {}; // userId -> socketId
-
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
     socket.on("join-room", (userId) => {
       userSocketMap[userId] = socket.id;
       io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    });
+
+    socket.on("join-groups", (groupIds) => {
+      if (Array.isArray(groupIds)) {
+        groupIds.forEach(groupId => {
+          socket.join(groupId.toString());
+        });
+      }
     });
 
     socket.on("call-user", ({ userToCall, signalData, from, name, isVideoCall }) => {
@@ -60,4 +69,15 @@ export const initSocket = (server) => {
   });
 
   return io;
+};
+
+export const getIo = () => {
+  if (!io) {
+    throw new Error("Socket.io not initialized!");
+  }
+  return io;
+};
+
+export const getReceiverSocketId = (receiverId) => {
+  return userSocketMap[receiverId];
 };
