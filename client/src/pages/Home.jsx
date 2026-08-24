@@ -276,7 +276,7 @@ const Home = () => {
         <nav>
           <h6 className="footer-title">Services</h6> 
           <a className="link link-hover cursor-pointer">Direct Messaging</a>
-          <a className="link link-hover cursor-pointer">Group Chats</a>
+          <Link to="/group-chats" className="link link-hover">Group Chats</Link>
           <Link to="/media-sharing" className="link link-hover">Media Sharing</Link>
         </nav> 
         <nav>

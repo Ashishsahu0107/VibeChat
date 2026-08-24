@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Contact from "./pages/Contact";
 import Jobs from "./pages/Jobs";
 import MediaSharing from "./pages/MediaSharing";
+import GroupChats from "./pages/GroupChats";
 import Chat from "./pages/Chat";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -24,6 +25,7 @@ const App = () => {
         <Route path="/contact" element={<Contact/>}/>
         <Route path="/jobs" element={<Jobs/>}/>
         <Route path="/media-sharing" element={<MediaSharing/>}/>
+        <Route path="/group-chats" element={<GroupChats/>}/>
         <Route path="/settings" element={authUser ? <Settings/> : <Navigate to="/login" />}/>
         <Route path="/chat" element={authUser ? <Chat/> : <Navigate to="/login" />}/>
         <Route path="/login" element={!authUser ? <Login/> : <Navigate to="/chat" />}/>
