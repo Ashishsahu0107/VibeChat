@@ -10,6 +10,7 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
   const [isConnecting, setIsConnecting] = useState(!isReceiving);
   const [callDuration, setCallDuration] = useState(0);
   const [callError, setCallError] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
   
   const { socket } = useSocket();
   const userAudio = useRef(null);
@@ -34,9 +35,7 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
         });
 
         peer.ontrack = (event) => {
-          if (userAudio.current) {
-            userAudio.current.srcObject = event.streams[0];
-          }
+          setRemoteStream(event.streams[0]);
         };
 
         peer.onicecandidate = (event) => {
@@ -187,3 +186,4 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
 };
 
 export default AudioCall;
+

@@ -2,16 +2,22 @@ import React, { useState, useEffect, useRef } from "react";
 import useChatStore from "../../store/useChatStore";
 import useAuthStore from "../../store/useAuthStore";
 import { useSocket } from "../../context/SocketContext";
-import { FiSend, FiPaperclip, FiSmile, FiMoreVertical, FiVideo, FiPhone } from "react-icons/fi";
-import { BsCheck, BsCheckAll } from "react-icons/bs";
+import { FiSend, FiPaperclip, FiSmile, FiMoreVertical, FiVideo, FiPhone, FiMic } from "react-icons/fi";
+import { BsCheck, BsCheckAll, BsStopCircle } from "react-icons/bs";
+import AudioCall from "./AudioCall";
+import VideoCall from "./VideoCall";
 
 const Chatting = ({ selectedUser }) => {
   const [content, setContent] = useState("");
-  const { messages, fetchMessages, sendMessage, loading } = useChatStore();
+  const { messages, fetchMessages, sendMessage, uploadAttachment, loading } = useChatStore();
   const { authUser } = useAuthStore();
   const { socket, onlineUsers } = useSocket();
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [outgoingCallType, setOutgoingCallType] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -60,9 +66,49 @@ const Chatting = ({ selectedUser }) => {
     }, 2000);
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioFile = new File([audioBlob], `Voice_Message_${new Date().getTime()}.webm`, { type: 'audio/webm' });
+        try {
+          const attachment = await uploadAttachment(audioFile);
+          await sendMessage("", selectedUser._id, [attachment]);
+        } catch (error) {
+          console.error("Failed to upload audio:", error);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      alert("Could not access microphone.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      setIsRecording(false);
+    }
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!content.trim() && !selectedUser) return;
+    if (!content.trim()) return;
     
     try {
       socket?.emit("stop-typing", selectedUser._id);
@@ -93,7 +139,25 @@ const Chatting = ({ selectedUser }) => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-base-200/50">
+    <div className="flex flex-col h-full w-full bg-base-200/50 relative">
+      {outgoingCallType === "video" && (
+        <VideoCall
+          authUser={authUser}
+          calleeId={selectedUser?.users?.find(u => String(u._id) !== String(authUser._id))?._id}
+          calleeName={chatName}
+          isReceiving={false}
+          onEndCall={() => setOutgoingCallType(null)}
+        />
+      )}
+      {outgoingCallType === "audio" && (
+        <AudioCall
+          authUser={authUser}
+          calleeId={selectedUser?.users?.find(u => String(u._id) !== String(authUser._id))?._id}
+          calleeName={chatName}
+          isReceiving={false}
+          onEndCall={() => setOutgoingCallType(null)}
+        />
+      )}
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 bg-base-100 border-b border-base-300">
         <div className="flex items-center gap-3">
@@ -115,8 +179,8 @@ const Chatting = ({ selectedUser }) => {
         </div>
         
         <div className="flex items-center gap-4 text-base-content/70">
-          <button className="btn btn-ghost btn-circle btn-sm hidden md:flex"><FiVideo size={20} /></button>
-          <button className="btn btn-ghost btn-circle btn-sm"><FiPhone size={20} /></button>
+          <button onClick={() => setOutgoingCallType("video")} className="p-2 text-base-content/70 hover:text-base-content hover:bg-base-300/50 rounded-full transition-colors hidden md:flex"><FiVideo size={20} /></button>
+          <button onClick={() => setOutgoingCallType("audio")} className="p-2 text-base-content/70 hover:text-base-content hover:bg-base-300/50 rounded-full transition-colors"><FiPhone size={20} /></button>
           <div className="divider divider-horizontal mx-0 hidden md:flex"></div>
           <button className="btn btn-ghost btn-circle btn-sm"><FiMoreVertical size={20} /></button>
         </div>
@@ -167,8 +231,10 @@ const Chatting = ({ selectedUser }) => {
         
         {content.trim() ? (
           <button type="submit" onClick={handleSend} className="p-2.5 bg-primary text-primary-content hover:opacity-80 rounded-full transition-opacity shadow-sm"><FiSend size={18} /></button>
+        ) : isRecording ? (
+          <button type="button" onClick={stopRecording} className="p-2.5 bg-error text-white hover:opacity-80 rounded-full transition-opacity shadow-sm animate-pulse"><BsStopCircle size={18} /></button>
         ) : (
-          <button type="button" className="p-2.5 bg-primary text-primary-content hover:opacity-80 rounded-full transition-opacity shadow-sm"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11.999 14.942c2.005 0 3.531-1.53 3.531-3.531V4.35c0-2.001-1.526-3.531-3.531-3.531S8.469 2.349 8.469 4.35v7.061c0 2.001 1.527 3.531 3.53 3.531zm6.238-3.53c0 3.531-2.942 6.002-6.237 6.002s-6.237-2.471-6.237-6.002H3.761c0 4.001 3.178 7.297 7.061 7.885v3.884h2.354v-3.884c3.884-.588 7.061-3.884 7.061-7.885h-2.002z"></path></svg></button>
+          <button type="button" onClick={startRecording} className="p-2.5 bg-primary text-primary-content hover:opacity-80 rounded-full transition-opacity shadow-sm"><FiMic size={18} /></button>
         )}
       </div>
     </div>
@@ -176,6 +242,15 @@ const Chatting = ({ selectedUser }) => {
 };
 
 export default Chatting;
+
+
+
+
+
+
+
+
+
 
 
 

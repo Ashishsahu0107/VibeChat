@@ -10,6 +10,7 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isConnecting, setIsConnecting] = useState(!isReceiving);
   const [callError, setCallError] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
   
   const { socket } = useSocket();
   const myVideo = useRef(null);
@@ -38,9 +39,7 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
         });
 
         peer.ontrack = (event) => {
-          if (userVideo.current) {
-            userVideo.current.srcObject = event.streams[0];
-          }
+          setRemoteStream(event.streams[0]);
         };
 
         peer.onicecandidate = (event) => {
@@ -151,7 +150,7 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
                <p className="mt-2 text-base-content/70">Check browser permissions or ensure a camera/mic is connected.</p>
              </div>
           ) : callAccepted ? (
-            <video playsInline ref={userVideo} autoPlay className="w-full h-full object-cover" />
+            <video playsInline ref={(node) => { if(node) node.srcObject = remoteStream }} autoPlay className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-white">
               <div className="avatar mb-4">
@@ -189,3 +188,4 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
 };
 
 export default VideoCall;
+
