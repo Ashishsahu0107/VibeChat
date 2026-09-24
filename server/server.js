@@ -7,7 +7,7 @@ import authRouter from "./src/routes/authRouter.js";
 import userRouter from "./src/routes/userRouter.js";
 import messageRouter from "./src/routes/messageRouter.js";
 import publicRouter from "./src/routes/publicRouter.js";
-import groupRouter from "./src/routes/groupRouter.js";
+import chatRouter from "./src/routes/chatRouter.js";
 import http from "http";
 import { initSocket } from "./src/socket/socket.js";
 
@@ -31,7 +31,7 @@ app.use(
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/messages", messageRouter);
-app.use("/api/groups", groupRouter);
+app.use("/api/chats", chatRouter);
 app.use("/api/public", publicRouter);
 
 app.get("/", (req, res) => {
