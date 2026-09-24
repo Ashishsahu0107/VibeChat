@@ -1,90 +1,77 @@
 import User from "../model/user.model.js";
+import cloudinary from "../config/cloudinary.js";
 
 export const getUsersForSidebar = async (req, res) => {
   try {
-    const loggedInUserId = req.user._id;
+    const keyword = req.query.search
+      ? {
+          $or: [
+            { fullName: { $regex: req.query.search, $options: "i" } },
+            { email: { $regex: req.query.search, $options: "i" } },
+          ],
+        }
+      : {};
 
-    // Find all users except the currently logged in user
-    const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select("-password");
-
-    res.status(200).json(filteredUsers);
+    const users = await User.find(keyword).find({ _id: { $ne: req.user._id } }).select("-password");
+    res.status(200).json(users);
   } catch (error) {
-    console.error("Error in getUsersForSidebar: ", error.message);
+    console.log("Error in getUsersForSidebar: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
 export const updateProfile = async (req, res) => {
   try {
-    const { fullName, phone, password } = req.body;
-    const userId = req.user._id;
-
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    if (fullName) user.fullName = fullName;
-    if (phone !== undefined) user.phone = phone;
-
-    if (password) {
-      const bcrypt = await import("bcryptjs");
-      const salt = await bcrypt.default.genSalt(10);
-      user.password = await bcrypt.default.hash(password, salt);
+    const { fullName, phone, about, profilePic, settings } = req.body;
+    
+    let updateFields = {};
+    if (fullName !== undefined) updateFields.fullName = fullName;
+    if (phone !== undefined) updateFields.phone = phone;
+    if (about !== undefined) updateFields.about = about;
+    if (profilePic !== undefined) updateFields.profilePic = profilePic;
+    
+    if (settings) {
+       if (settings.theme !== undefined) updateFields["settings.theme"] = settings.theme;
+       if (settings.notifications !== undefined) updateFields["settings.notifications"] = settings.notifications;
+       if (settings.readReceipts !== undefined) updateFields["settings.readReceipts"] = settings.readReceipts;
     }
 
-    await user.save();
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updateFields },
+      { new: true }
+    ).select("-password");
 
-    res.status(200).json({
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      phone: user.phone,
-      profilePic: user.image,
-    });
+    res.status(200).json(updatedUser);
   } catch (error) {
-    console.error("Error in updateProfile:", error.message);
+    console.log("Error in updateProfile: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-import cloudinary from "../config/cloudinary.js";
-import streamifier from "streamifier";
-
 export const uploadProfileImage = async (req, res) => {
   try {
-    const userId = req.user._id;
-
     if (!req.file) {
       return res.status(400).json({ error: "No image file provided" });
     }
 
-    const streamUpload = (req) => {
-      return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "vibechat_profiles" },
-          (error, result) => {
-            if (result) resolve(result);
-            else reject(error);
-          }
-        );
-        streamifier.createReadStream(req.file.buffer).pipe(stream);
-      });
-    };
+    // Convert buffer to base64
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
+    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
-    const result = await streamUpload(req);
-
-    const user = await User.findById(userId);
-    user.image = result.secure_url;
-    await user.save();
-
-    res.status(200).json({
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      phone: user.phone,
-      profilePic: user.image,
+    const uploadResponse = await cloudinary.uploader.upload(dataURI, {
+      folder: "vibechat_profiles",
     });
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { profilePic: uploadResponse.secure_url },
+      { new: true }
+    ).select("-password");
+
+    res.status(200).json(updatedUser);
   } catch (error) {
-    console.error("Error in uploadProfileImage:", error.message);
-    res.status(500).json({ error: "Internal server error", details: error.message });
+    console.log("Error in uploadProfileImage: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 };

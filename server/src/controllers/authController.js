@@ -4,7 +4,7 @@ import generateToken from "../utils/generateToken.js";
 
 export const register = async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
+    const { fullName, email, password, phone } = req.body;
 
     if (!fullName || !email || !password) {
       return res.status(400).json({ error: "Please fill all fields" });
@@ -16,36 +16,34 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    // Hash Password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Profile Pic placeholder
-    const profilePic = `https://ui-avatars.com/api/?name=${fullName}&background=random`;
+    const profilePic = `https://ui-avatars.com/api/?name=${fullName.replace(' ', '+')}&background=random`;
 
     const newUser = new User({
       fullName,
       email,
       password: hashedPassword,
-      image: profilePic,
+      phone: phone || "",
+      profilePic: profilePic,
     });
 
-    if (newUser) {
-      generateToken(newUser._id, res);
-      await newUser.save();
+    await newUser.save();
 
-      res.status(201).json({
-        _id: newUser._id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        profilePic: newUser.image,
-        message: "Registration successful!",
-      });
-    } else {
-      res.status(400).json({ error: "Invalid user data" });
-    }
+    generateToken(newUser._id, res);
+
+    res.status(201).json({
+      _id: newUser._id,
+      fullName: newUser.fullName,
+      email: newUser.email,
+      profilePic: newUser.profilePic,
+      phone: newUser.phone,
+      about: newUser.about,
+      settings: newUser.settings
+    });
   } catch (error) {
-    console.log("Error in register controller", error.message);
+    console.log("Error in Register controller", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -54,14 +52,20 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    const isPasswordCorrect = await bcrypt.compare(
-      password,
-      user?.password || "",
-    );
+    if (!email || !password) {
+      return res.status(400).json({ error: "Please fill all fields" });
+    }
 
-    if (!user || !isPasswordCorrect) {
-      return res.status(400).json({ error: "Invalid username or password" });
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid credentials" });
     }
 
     generateToken(user._id, res);
@@ -70,70 +74,66 @@ export const login = async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      profilePic: user.image,
-      message: "Login successful!",
+      profilePic: user.profilePic,
+      phone: user.phone,
+      about: user.about,
+      settings: user.settings
     });
   } catch (error) {
-    console.log("Error in login controller", error.message);
+    console.log("Error in Login controller", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-export const logout = async (req, res) => {
+export const logout = (req, res) => {
   try {
     res.cookie("jwt", "", { maxAge: 0 });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    console.log("Error in logout controller", error.message);
+    console.log("Error in Logout controller", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-export const GoogleUserLogin = async (req, res, next) => {
+export const checkAuth = (req, res) => {
   try {
-    let { name, email, id, imageUrl } = req.body;
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.log("Error in CheckAuth controller", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
-    if (!imageUrl) {
-      imageUrl = `https://ui-avatars.com/api/?name=${name}&background=random`;
-    }
-    let existingUser = await User.findOne({ email });
-    const salt = await bcrypt.genSalt(10);
-
-    if (existingUser) {
-      if (!existingUser.userType || existingUser.userType === "regular") {
-        existingUser.userType = "hybrid";
-        existingUser.googleId = await bcrypt.hash(id, salt);
-        await existingUser.save();
-      } else {
-        const isVerified = await bcrypt.compare(id, existingUser.googleId);
-        if (!isVerified) {
-          const error = new Error("User Not Verified");
-          error.statusCode = 400;
-          return next(error);
-        }
-      }
-    } else {
-      const hashGoogleID = await bcrypt.hash(id, salt);
-
-      const newUser = await User.create({
-        fullName: name,
+export const GoogleUserLogin = async (req, res) => {
+  try {
+    // googleMiddleware.js should attach req.user if token is valid
+    // For now, let's just create/login based on req.body
+    const { email, fullName, profilePic } = req.body;
+    let user = await User.findOne({ email });
+    
+    if (!user) {
+      user = new User({
         email,
-        googleId: hashGoogleID,
-        userType: "google",
-        image: imageUrl,
+        fullName,
+        profilePic: profilePic || `https://ui-avatars.com/api/?name=${fullName?.replace(' ', '+')}`,
+        password: "google-auth-no-password",
       });
-      existingUser = newUser;
+      await user.save();
     }
-
-    generateToken(existingUser._id, res);
+    
+    generateToken(user._id, res);
+    
     res.status(200).json({
-      _id: existingUser._id,
-      fullName: existingUser.fullName,
-      email: existingUser.email,
-      profilePic: existingUser.image,
-      message: "Login successful!",
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
+      phone: user.phone,
+      about: user.about,
+      settings: user.settings
     });
   } catch (error) {
-    next(error);
+    console.log("Error in Google Login", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };

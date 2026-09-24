@@ -1,65 +1,88 @@
 import Message from "../model/message.model.js";
+import Chat from "../model/chat.model.js";
 import User from "../model/user.model.js";
 
+// Send Message
 export const sendMessage = async (req, res) => {
-  try {
-    const { id: receiverId } = req.params;
-    const { message } = req.body;
-    const senderId = req.user._id;
+  const { content, chatId, attachments, replyTo } = req.body;
 
-    if (!message) {
-      return res.status(400).json({ error: "Message content is required" });
-    }
-
-    const receiver = await User.findById(receiverId);
-    if (!receiver) {
-      return res.status(404).json({ error: "Receiver not found" });
-    }
-
-    const newMessage = await Message.create({ senderId, receiverId, message });
-    return res.status(201).json(newMessage);
-  } catch (err) {
-    console.log("Error in sendMessage controller: ", err.message);
-    return res.status(500).json({ error: "Internal server error" });
+  if (!content && (!attachments || attachments.length === 0)) {
+    return res.status(400).json({ message: "Invalid data passed into request" });
   }
-};
 
-export const getMessages = async (req, res) => {
+  var newMessage = {
+    sender: req.user._id,
+    content: content,
+    chatId: chatId,
+    attachments: attachments || [],
+    replyTo: replyTo || null
+  };
+
   try {
-    const { id: userToChatId } = req.params;
-    const senderId = req.user._id;
+    var message = await Message.create(newMessage);
 
-    const messages = await Message.find({
-      $or: [
-        { senderId: senderId, receiverId: userToChatId },
-        { senderId: userToChatId, receiverId: senderId },
-      ],
-    }).sort({ createdAt: 1 });
-
-    return res.status(200).json(messages);
-  } catch (err) {
-    console.log("Error in getMessages controller: ", err.message);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-export const deleteMessages = async (req, res) => {
-  try {
-    const { messageIds } = req.body;
-    const senderId = req.user._id;
-
-    if (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0) {
-      return res.status(400).json({ error: "Message IDs are required" });
-    }
-
-    await Message.deleteMany({
-      _id: { $in: messageIds },
-      $or: [{ senderId: senderId }, { receiverId: senderId }]
+    message = await message.populate("sender", "fullName profilePic");
+    message = await message.populate("chatId");
+    message = await message.populate("replyTo");
+    message = await User.populate(message, {
+      path: "chatId.users",
+      select: "fullName profilePic email",
     });
 
-    return res.status(200).json({ message: "Messages deleted successfully" });
-  } catch (err) {
-    console.log("Error in deleteMessages controller: ", err.message);
-    return res.status(500).json({ error: "Internal server error" });
+    await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message });
+
+    res.status(200).json(message);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
+// Get All Messages for a Chat
+export const allMessages = async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.chatId);
+    if (!chat) return res.status(404).json({ message: "Chat not found" });
+    
+    // Check clearedAt
+    const userState = chat.userStates?.find(s => s.userId && s.userId.toString() === req.user._id.toString());
+    const clearedAt = userState ? userState.clearedAt : null;
+    
+    let query = { chatId: req.params.chatId };
+    if (clearedAt) {
+      query.createdAt = { $gt: clearedAt };
+    }
+    // Also ignore messages deleted by this user
+    query.deletedFor = { $ne: req.user._id };
+
+    const messages = await Message.find(query)
+      .populate("sender", "fullName profilePic email")
+      .populate("replyTo")
+      .sort({ createdAt: 1 });
+      
+    res.status(200).json(messages);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Delete Message for Me or Everyone
+export const deleteMessage = async (req, res) => {
+  const { messageId } = req.params;
+  const { forEveryone } = req.body;
+  try {
+    const msg = await Message.findById(messageId);
+    if (!msg) return res.status(404).json({ message: "Message not found" });
+    
+    if (forEveryone && msg.sender.toString() === req.user._id.toString()) {
+       await Message.findByIdAndDelete(messageId);
+       return res.status(200).json({ message: "Message deleted for everyone" });
+    } else {
+       msg.deletedFor.push(req.user._id);
+       await msg.save();
+       return res.status(200).json({ message: "Message deleted for you" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
