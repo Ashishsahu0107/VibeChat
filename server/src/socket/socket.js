@@ -1,10 +1,12 @@
 import { Server } from "socket.io";
+import User from "../model/user.model.js";
 
 let io;
 const userSocketMap = {}; // userId -> socketId
 
 export const initSocket = (server) => {
   io = new Server(server, {
+    pingTimeout: 60000,
     cors: {
       origin: (origin, callback) => callback(null, true),
       credentials: true,
@@ -15,23 +17,55 @@ export const initSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    socket.on("join-room", (userId) => {
+    // Initial setup when user logs in
+    socket.on("setup", async (userId) => {
       userSocketMap[userId] = socket.id;
+      socket.join(userId); // Join personal room for targeted events
+      
+      // Update DB
+      await User.findByIdAndUpdate(userId, { isOnline: true });
       io.emit("getOnlineUsers", Object.keys(userSocketMap));
+      socket.emit("connected");
     });
 
-    socket.on("join-groups", (groupIds) => {
-      if (Array.isArray(groupIds)) {
-        groupIds.forEach(groupId => {
-          socket.join(groupId.toString());
-        });
-      }
+    // Join a specific chat room (for typing/read events)
+    socket.on("join-chat", (chatId) => {
+      socket.join(chatId);
+      console.log(`User joined chat: ${chatId}`);
     });
 
-    socket.on("call-user", ({ userToCall, signalData, from, name, isVideoCall }) => {
+    // New Message Event
+    socket.on("new-message", (newMessageReceived) => {
+      let chat = newMessageReceived.chatId;
+
+      if (!chat.users) return console.log("chat.users not defined");
+
+      chat.users.forEach((user) => {
+        if (user._id === newMessageReceived.sender._id) return; // Don't send to self
+        
+        socket.in(user._id).emit("message-received", newMessageReceived);
+      });
+    });
+
+    // Typing Indicators
+    socket.on("typing", (room) => socket.in(room).emit("typing", room));
+    socket.on("stop-typing", (room) => socket.in(room).emit("stop-typing", room));
+
+    // Message Status Events (Delivered / Read)
+    socket.on("message-delivered", ({ messageId, chatId, userId }) => {
+      // In a real app, you might update DB here or via API
+      socket.in(chatId).emit("message-status-updated", { messageId, status: "delivered", userId });
+    });
+
+    socket.on("message-read", ({ messageId, chatId, userId }) => {
+       socket.in(chatId).emit("message-status-updated", { messageId, status: "read", userId });
+    });
+
+    // Call Signaling (WebRTC)
+    socket.on("call-user", ({ userToCall, signalData, from, name, isVideoCall, chatId }) => {
       const socketId = userSocketMap[userToCall];
       if (socketId) {
-        io.to(socketId).emit("call-incoming", { signal: signalData, from, name, isVideoCall });
+        io.to(socketId).emit("call-incoming", { signal: signalData, from, name, isVideoCall, chatId });
       }
     });
 
@@ -49,18 +83,21 @@ export const initSocket = (server) => {
       }
     });
 
-    socket.on("end-call", ({ to }) => {
+    socket.on("end-call", ({ to, chatId }) => {
       const socketId = userSocketMap[to];
       if (socketId) {
-        io.to(socketId).emit("call-ended");
+        io.to(socketId).emit("call-ended", { chatId });
       }
     });
 
-    socket.on("disconnect", () => {
+    // Disconnect
+    socket.on("disconnect", async () => {
       console.log("User disconnected:", socket.id);
       for (let [userId, socketId] of Object.entries(userSocketMap)) {
         if (socketId === socket.id) {
           delete userSocketMap[userId];
+          // Update DB
+          await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: new Date() });
           io.emit("getOnlineUsers", Object.keys(userSocketMap));
           break;
         }
