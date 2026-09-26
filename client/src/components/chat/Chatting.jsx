@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import useChatStore from "../../store/useChatStore";
 import useAuthStore from "../../store/useAuthStore";
 import { useSocket } from "../../context/SocketContext";
-import { FiSend, FiPaperclip, FiSmile, FiMoreVertical, FiVideo, FiPhone, FiMic } from "react-icons/fi";
+import { FiSend, FiPaperclip, FiSmile, FiMoreVertical, FiVideo, FiPhone, FiMic, FiTrash } from "react-icons/fi";
 import { BsCheck, BsCheckAll, BsStopCircle } from "react-icons/bs";
 import AudioCall from "./AudioCall";
 import VideoCall from "./VideoCall";
+import CustomAudioPlayer from "./CustomAudioPlayer";
 
 const Chatting = ({ selectedUser }) => {
   const [content, setContent] = useState("");
@@ -15,6 +16,10 @@ const Chatting = ({ selectedUser }) => {
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const fileInputRef = useRef(null);
   const [outgoingCallType, setOutgoingCallType] = useState(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -48,6 +53,18 @@ const Chatting = ({ selectedUser }) => {
     };
   }, [socket, selectedUser]);
 
+    const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setSelectedFile(file);
+    if (file.type.startsWith("image/")) {
+      setFilePreview(URL.createObjectURL(file));
+    } else {
+      setFilePreview("document");
+    }
+  };
+
   const handleTypingChange = (e) => {
     setContent(e.target.value);
     
@@ -79,15 +96,10 @@ const Chatting = ({ selectedUser }) => {
         }
       };
 
-      mediaRecorder.onstop = async () => {
+      mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const audioFile = new File([audioBlob], `Voice_Message_${new Date().getTime()}.webm`, { type: 'audio/webm' });
-        try {
-          const attachment = await uploadAttachment(audioFile);
-          await sendMessage("", selectedUser._id, [attachment]);
-        } catch (error) {
-          console.error("Failed to upload audio:", error);
-        }
+        setRecordedAudio({ file: audioFile, url: URL.createObjectURL(audioBlob) });
       };
 
       mediaRecorder.start();
@@ -107,16 +119,32 @@ const Chatting = ({ selectedUser }) => {
   };
 
   const handleSend = async (e) => {
-    e.preventDefault();
-    if (!content.trim()) return;
+    if (e) e.preventDefault();
+    if (!content.trim() && !recordedAudio && !selectedFile) return;
     
     try {
       socket?.emit("stop-typing", selectedUser._id);
       setTyping(false);
-      await sendMessage(content, selectedUser._id);
+      
+      let attachments = [];
+      if (recordedAudio) {
+        const attachment = await uploadAttachment(recordedAudio.file);
+        attachments.push(attachment);
+      }
+      if (selectedFile) {
+        const attachment = await uploadAttachment(selectedFile);
+        attachments.push(attachment);
+      }
+      
+      await sendMessage(content, selectedUser._id, attachments);
       setContent("");
+      setRecordedAudio(null);
+      setSelectedFile(null);
+      setFilePreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error(error);
+      alert("Failed to send message: " + error.message);
     }
   };
 
@@ -215,45 +243,61 @@ const Chatting = ({ selectedUser }) => {
       </div>
 
       {/* Composer */}
-      <div className="p-3 bg-base-100 flex items-center gap-2 border-t border-base-300">
-        <button type="button" className="p-2 text-base-content/70 hover:bg-base-300/50 rounded-full transition-colors"><FiSmile size={24} /></button>
-        <button type="button" className="p-2 text-base-content/70 hover:bg-base-300/50 rounded-full transition-colors"><FiPaperclip size={22} /></button>
-        
-        <form onSubmit={handleSend} className="flex-1 flex items-center bg-base-200 rounded-lg px-2">
-          <input
-            type="text"
-            className="input w-full bg-transparent border-none focus:outline-none"
-            placeholder="Type a message"
-            value={content}
-            onChange={handleTypingChange}
-          />
-        </form>
-        
-        {content.trim() ? (
-          <button type="submit" onClick={handleSend} className="p-2.5 bg-primary text-primary-content hover:opacity-80 rounded-full transition-opacity shadow-sm"><FiSend size={18} /></button>
-        ) : isRecording ? (
-          <button type="button" onClick={stopRecording} className="p-2.5 bg-error text-white hover:opacity-80 rounded-full transition-opacity shadow-sm animate-pulse"><BsStopCircle size={18} /></button>
-        ) : (
-          <button type="button" onClick={startRecording} className="p-2.5 bg-primary text-primary-content hover:opacity-80 rounded-full transition-opacity shadow-sm"><FiMic size={18} /></button>
+              {filePreview && (
+          <div className="p-3 bg-base-200 border-t border-base-300 flex items-center relative">
+            <div className="relative inline-block">
+              {filePreview === "document" ? (
+                <div className="w-16 h-16 bg-base-300 rounded-lg flex items-center justify-center text-xs">File</div>
+              ) : (
+                <img src={filePreview} alt="Preview" className="h-20 w-auto rounded-lg object-cover shadow-sm border border-base-300" />
+              )}
+              <button 
+                onClick={() => { setSelectedFile(null); setFilePreview(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                className="absolute -top-2 -right-2 bg-base-100 text-error rounded-full p-1 shadow-md hover:bg-base-300 transition-colors"
+              >
+                <FiTrash size={14} />
+              </button>
+            </div>
+          </div>
         )}
+        <div className="p-3 bg-base-100 flex items-center gap-2 border-t border-base-300">
+        <button type="button" className="p-2 text-base-content/70 hover:bg-base-300/50 rounded-full transition-colors"><FiSmile size={24} /></button>
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileChange} />
+          <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-base-content/70 hover:bg-base-300/50 rounded-full transition-colors"><FiPaperclip size={22} /></button>
+        
+                  <div className="flex-1 flex items-center bg-base-200 rounded-lg px-2 h-12">
+            {recordedAudio ? (
+              <div className="flex items-center w-full justify-between px-2">
+                <CustomAudioPlayer src={recordedAudio.url} />
+                <button type="button" onClick={() => setRecordedAudio(null)} className="p-2 text-error hover:bg-base-300 rounded-full transition-colors ml-2">
+                  <FiTrash size={18} />
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSend} className="flex-1 h-full flex items-center">
+                <input
+                  type="text"
+                  className="input w-full h-full bg-transparent border-none focus:outline-none focus:border-transparent px-2"
+                  placeholder="Type a message"
+                  value={content}
+                  onChange={handleTypingChange}
+                />
+              </form>
+            )}
+          </div>
+          
+          {content.trim() || recordedAudio || selectedFile ? (
+            <button type="button" onClick={handleSend} className="p-2.5 bg-primary text-primary-content hover:opacity-80 rounded-full transition-opacity shadow-sm"><FiSend size={18} /></button>
+          ) : isRecording ? (
+            <button type="button" onClick={stopRecording} className="p-2.5 bg-error text-white hover:opacity-80 rounded-full transition-opacity shadow-sm animate-pulse"><BsStopCircle size={18} /></button>
+          ) : (
+            <button type="button" onClick={startRecording} className="p-2.5 bg-primary text-primary-content hover:opacity-80 rounded-full transition-opacity shadow-sm"><FiMic size={18} /></button>
+          )}
       </div>
     </div>
   );
 };
 
 export default Chatting;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
