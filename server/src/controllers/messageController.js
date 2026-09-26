@@ -95,13 +95,18 @@ export const uploadAttachment = async (req, res) => {
       return res.status(400).json({ error: "No file provided" });
     }
 
-    const b64 = Buffer.from(req.file.buffer).toString("base64");
-    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-
-    const uploadResponse = await cloudinary.uploader.upload(dataURI, {
-      resource_type: "auto",
-      folder: "vibechat_attachments",
+    const uploadPromise = new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { resource_type: "video", folder: "vibechat_attachments" },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
     });
+
+    const uploadResponse = await uploadPromise;
 
     const attachment = {
       url: uploadResponse.secure_url,
@@ -114,7 +119,10 @@ export const uploadAttachment = async (req, res) => {
 
     res.status(200).json(attachment);
   } catch (error) {
-    console.log("Error in uploadAttachment: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    require("fs").writeFileSync("error_log.txt", JSON.stringify(error, null, 2) + "\n" + error.message); console.log("Error in uploadAttachment: ", error.message);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 };
+
+
+
