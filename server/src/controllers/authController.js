@@ -95,9 +95,13 @@ export const logout = (req, res) => {
   }
 };
 
-export const checkAuth = (req, res) => {
+export const checkAuth = async (req, res) => {
   try {
-    res.status(200).json(req.user);
+    const user = await (await import("../model/user.model.js")).default
+      .findById(req.user._id)
+      .select("-password");
+    if (!user) return res.status(401).json({ error: "User not found" });
+    res.status(200).json(user);
   } catch (error) {
     console.log("Error in CheckAuth controller", error.message);
     res.status(500).json({ error: "Internal Server Error" });
