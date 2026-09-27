@@ -1,13 +1,91 @@
 @import "tailwindcss";
 
-
 /* flyonui */
 @plugin "flyonui" {
   themes: all;
 }
 
-/* daisyui */
-/* @plugin "daisyui";
-@plugin "daisyui" {
-  themes: all;
-} */
+/* ── Global Reset & Base ────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Safe area for mobile (iOS/Android notch) ────────────────────────────── */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+}
+
+/* ── Custom Scrollbar ────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(var(--bc) / 0.15);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--bc) / 0.3);
+}
+
+/* ── Message bubble animations ───────────────────────────────────────────── */
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Apply to incoming messages */
+[id^="msg-"] {
+  animation: messageIn 0.15s ease-out;
+}
+
+/* ── Typing Bounce ────────────────────────────────────────────────────────── */
+@keyframes typingBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ── Context menu / popover fade in ─────────────────────────────────────── */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Emoji Picker override to match theme ────────────────────────────────── */
+.EmojiPickerReact {
+  border-color: oklch(var(--b3)) !important;
+  background-color: oklch(var(--b1)) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 16px !important;
+}
+
+/* ── Prevent body scroll when modal open ────────────────────────────────── */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* ── Smooth transitions ──────────────────────────────────────────────────── */
+.transition-all {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
