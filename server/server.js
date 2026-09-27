@@ -14,7 +14,7 @@ import http from "http";
 import { initSocket } from "./src/socket/socket.js";
 
 dotenv.config();
-
+import "./src/cron/cleanup.js";
 const port = process.env.PORT || 5000;
 const app = express();
 
