@@ -12,16 +12,15 @@ const userSchema = new mongoose.Schema(
     lastSeen: { type: Date, default: Date.now },
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     settings: {
-      theme: { type: String, default: "system" },
+      theme: { type: String, default: "light" },
       notifications: { type: Boolean, default: true },
       readReceipts: { type: Boolean, default: true },
-    }
+      lastSeenVisible: { type: Boolean, default: true },
+      soundEnabled: { type: Boolean, default: true },
+    },
   },
   { timestamps: true }
 );
-
-userSchema.index({ email: 1 });
-userSchema.index({ fullName: "text" }); // For user search
 
 const User = mongoose.model("User", userSchema);
 export default User;

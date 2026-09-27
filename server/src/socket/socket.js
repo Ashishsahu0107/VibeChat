@@ -1,8 +1,10 @@
 import { Server } from "socket.io";
 import User from "../model/user.model.js";
+import jwt from "jsonwebtoken";
 
 let io;
-const userSocketMap = {}; // userId -> socketId
+// Map: userId -> Set of socketIds (support multiple tabs)
+const userSocketMap = {}; // userId -> socketId (keep simple for compatibility)
 
 export const initSocket = (server) => {
   io = new Server(server, {
@@ -11,57 +13,60 @@ export const initSocket = (server) => {
       origin: (origin, callback) => callback(null, true),
       credentials: true,
       methods: ["GET", "POST"],
-    }
+    },
   });
 
   io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+    console.log("Socket connected:", socket.id);
 
-    // Initial setup when user logs in
+    // ── Setup: register user socket ──────────────────────────────────────────
     socket.on("setup", async (userId) => {
+      if (!userId) return;
       userSocketMap[userId] = socket.id;
-      socket.join(userId); // Join personal room for targeted events
-      
-      // Update DB
-      await User.findByIdAndUpdate(userId, { isOnline: true });
+      socket.userId = userId; // store on socket for disconnect lookup
+      socket.join(userId);
+
+      try {
+        await User.findByIdAndUpdate(userId, { isOnline: true });
+      } catch (_) {}
+
       io.emit("getOnlineUsers", Object.keys(userSocketMap));
       socket.emit("connected");
     });
 
-    // Join a specific chat room (for typing/read events)
+    // ── Join Chat Room ───────────────────────────────────────────────────────
     socket.on("join-chat", (chatId) => {
       socket.join(chatId);
-      console.log(`User joined chat: ${chatId}`);
     });
 
-    // New Message Event
-    socket.on("new-message", (newMessageReceived) => {
-      let chat = newMessageReceived.chatId;
-
-      if (!chat.users) return console.log("chat.users not defined");
-
-      chat.users.forEach((user) => {
-        if (user._id === newMessageReceived.sender._id) return; // Don't send to self
-        
-        socket.in(user._id).emit("message-received", newMessageReceived);
-      });
+    socket.on("leave-chat", (chatId) => {
+      socket.leave(chatId);
     });
 
-    // Typing Indicators
-    socket.on("typing", (room) => socket.in(room).emit("typing", room));
-    socket.on("stop-typing", (room) => socket.in(room).emit("stop-typing", room));
+    // ── Typing Indicators ────────────────────────────────────────────────────
+    socket.on("typing", ({ chatId, userId, userName }) => {
+      socket.to(chatId).emit("typing", { chatId, userId, userName });
+    });
 
-    // Message Status Events (Delivered / Read)
+    socket.on("stop-typing", ({ chatId, userId }) => {
+      socket.to(chatId).emit("stop-typing", { chatId, userId });
+    });
+
+    // ── Message Delivered / Read ─────────────────────────────────────────────
     socket.on("message-delivered", ({ messageId, chatId, userId }) => {
-      // In a real app, you might update DB here or via API
-      socket.in(chatId).emit("message-status-updated", { messageId, status: "delivered", userId });
+      socket.to(chatId).emit("message-status-updated", { messageId, status: "delivered", userId });
     });
 
     socket.on("message-read", ({ messageId, chatId, userId }) => {
-       socket.in(chatId).emit("message-status-updated", { messageId, status: "read", userId });
+      socket.to(chatId).emit("message-status-updated", { messageId, status: "read", userId });
     });
 
-    // Call Signaling (WebRTC)
+    // ── Bulk Read ────────────────────────────────────────────────────────────
+    socket.on("messages-read-bulk", ({ chatId, userId }) => {
+      socket.to(chatId).emit("messages-read", { chatId, userId });
+    });
+
+    // ── WebRTC Call Signaling ────────────────────────────────────────────────
     socket.on("call-user", ({ userToCall, signalData, from, name, isVideoCall, chatId }) => {
       const socketId = userSocketMap[userToCall];
       if (socketId) {
@@ -71,36 +76,35 @@ export const initSocket = (server) => {
 
     socket.on("answer-call", (data) => {
       const socketId = userSocketMap[data.to];
-      if (socketId) {
-        io.to(socketId).emit("call-accepted", data.signal);
-      }
+      if (socketId) io.to(socketId).emit("call-accepted", data.signal);
     });
 
     socket.on("ice-candidate", (data) => {
       const socketId = userSocketMap[data.to];
-      if (socketId) {
-        io.to(socketId).emit("ice-candidate", data.candidate);
-      }
+      if (socketId) io.to(socketId).emit("ice-candidate", data.candidate);
     });
 
     socket.on("end-call", ({ to, chatId }) => {
       const socketId = userSocketMap[to];
-      if (socketId) {
-        io.to(socketId).emit("call-ended", { chatId });
-      }
+      if (socketId) io.to(socketId).emit("call-ended", { chatId });
     });
 
-    // Disconnect
+    socket.on("call-rejected", ({ to }) => {
+      const socketId = userSocketMap[to];
+      if (socketId) io.to(socketId).emit("call-rejected");
+    });
+
+    // ── Disconnect ───────────────────────────────────────────────────────────
     socket.on("disconnect", async () => {
-      console.log("User disconnected:", socket.id);
-      for (let [userId, socketId] of Object.entries(userSocketMap)) {
-        if (socketId === socket.id) {
-          delete userSocketMap[userId];
-          // Update DB
+      const userId = socket.userId;
+      if (userId && userSocketMap[userId] === socket.id) {
+        delete userSocketMap[userId];
+        try {
           await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: new Date() });
-          io.emit("getOnlineUsers", Object.keys(userSocketMap));
-          break;
-        }
+        } catch (_) {}
+        io.emit("getOnlineUsers", Object.keys(userSocketMap));
+        // Notify all rooms this user was in
+        io.emit("user-offline", { userId, lastSeen: new Date() });
       }
     });
   });
@@ -109,9 +113,7 @@ export const initSocket = (server) => {
 };
 
 export const getIo = () => {
-  if (!io) {
-    throw new Error("Socket.io not initialized!");
-  }
+  if (!io) throw new Error("Socket.io not initialized!");
   return io;
 };
 
