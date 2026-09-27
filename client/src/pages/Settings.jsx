@@ -7,6 +7,7 @@ import {
 import { BsShieldCheck } from 'react-icons/bs';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import ImageCropper from '../components/ImageCropper';
 
 const THEMES = [
   "light", "dark", "black", "claude", "corporate", "ghibli", "gourmet",
@@ -56,13 +57,24 @@ const Settings = () => {
     authUser?.settings?.theme || localStorage.getItem('theme') || 'light'
   );
   const fileInputRef = useRef(null);
+  const [cropImageSrc, setCropImageSrc] = useState(null);
 
-  const handleImageChange = async (e) => {
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) return toast.error('Please select an image');
+    
+    const reader = new FileReader();
+    reader.addEventListener('load', () => setCropImageSrc(reader.result));
+    reader.readAsDataURL(file);
+    e.target.value = ''; // reset
+  };
+
+  const handleCropComplete = async (croppedFile) => {
+    setCropImageSrc(null);
+    if (!croppedFile) return;
     const data = new FormData();
-    data.append('image', file);
+    data.append('image', croppedFile);
     setIsUploading(true);
     const res = await updateProfileImage(data);
     if (res.success) toast.success('Profile photo updated!');
@@ -320,6 +332,14 @@ const Settings = () => {
           <span className="font-semibold text-sm">Logout</span>
         </button>
       </div>
+      {/* Modals & Portals */}
+      {cropImageSrc && (
+        <ImageCropper
+          imageSrc={cropImageSrc}
+          onCropComplete={handleCropComplete}
+          onCancel={() => setCropImageSrc(null)}
+        />
+      )}
     </div>
   );
 };

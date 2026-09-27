@@ -111,7 +111,7 @@ export const SocketProvider = ({ children }) => {
     }
 
     const socketUrl = window.location.origin.includes("localhost")
-      ? `http://${window.location.hostname}:4500`
+      ? import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:4500`
       : "/";
 
     const newSocket = io(socketUrl, {

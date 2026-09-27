@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import path from "path";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
@@ -70,10 +71,19 @@ app.get("/", (req, res) => {
   res.json({ message: "VibeChat API is running", status: "ok" });
 });
 
-// ── 404 Handler ────────────────────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
+// ── Production Setup ───────────────────────────────────────────────────────
+const __dirname = path.resolve();
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/dist")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../client/dist", "index.html"));
+  });
+} else {
+  // ── 404 Handler ────────────────────────────────────────────────────────────
+  app.use((req, res) => {
+    res.status(404).json({ error: "Route not found" });
+  });
+}
 
 // ── Error Handler ──────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {

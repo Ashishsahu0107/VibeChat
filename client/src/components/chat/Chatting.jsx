@@ -14,6 +14,7 @@ import AudioCall from "./AudioCall";
 import VideoCall from "./VideoCall";
 import CustomAudioPlayer from "./CustomAudioPlayer";
 import ChatInfoPanel from "./ChatInfoPanel";
+import MediaViewerModal from "./MediaViewerModal";
 import toast from "react-hot-toast";
 
 // ── Date Separator ─────────────────────────────────────────────────────────────
@@ -116,26 +117,29 @@ const ReadTicks = ({ msg, authUserId }) => {
 };
 
 // ── Attachment Renderer ─────────────────────────────────────────────────────────
-const AttachmentRenderer = ({ attachment }) => {
+const AttachmentRenderer = ({ attachment, onMediaClick }) => {
   if (attachment.type === "image") {
     return (
-      <a href={attachment.url} target="_blank" rel="noreferrer">
-        <img
-          src={attachment.url}
-          alt={attachment.name || "Image"}
-          className="rounded-lg max-w-[220px] max-h-[220px] object-cover mt-1 cursor-pointer hover:opacity-90 transition-opacity"
-          loading="lazy"
-        />
-      </a>
+      <img
+        src={attachment.url}
+        alt={attachment.name || "Image"}
+        onClick={() => onMediaClick && onMediaClick(attachment.url)}
+        className="rounded-lg max-w-[220px] max-h-[220px] object-cover mt-1 cursor-pointer hover:opacity-90 transition-opacity"
+        loading="lazy"
+      />
     );
   }
   if (attachment.type === "video") {
     return (
-      <video
-        src={attachment.url}
-        controls
-        className="rounded-lg max-w-[260px] max-h-[180px] mt-1"
-      />
+      <div className="relative cursor-pointer mt-1 max-w-[260px] max-h-[180px] rounded-lg overflow-hidden" onClick={() => onMediaClick && onMediaClick(attachment.url)}>
+        <video
+          src={attachment.url}
+          className="w-full h-full object-cover pointer-events-none"
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors">
+          <FiPlay size={32} className="text-white drop-shadow-md" />
+        </div>
+      </div>
     );
   }
   if (attachment.type === "audio") {
@@ -155,7 +159,7 @@ const AttachmentRenderer = ({ attachment }) => {
 };
 
 // ── Message Bubble ──────────────────────────────────────────────────────────────
-const MessageBubble = ({ msg, isMe, isGroup, authUser, onContextMenu, onReact }) => {
+const MessageBubble = ({ msg, isMe, isGroup, authUser, onContextMenu, onReact, onMediaClick }) => {
   const isDeleted = msg.isDeleted;
   const starredByMe = msg.starredBy?.some((id) => id === authUser._id || id?.toString() === authUser._id);
 
@@ -232,7 +236,7 @@ const MessageBubble = ({ msg, isMe, isGroup, authUser, onContextMenu, onReact })
           {!isDeleted && msg.attachments?.length > 0 && (
             <div className="mb-1">
               {msg.attachments.map((att, i) => (
-                <AttachmentRenderer key={i} attachment={att} />
+                <AttachmentRenderer key={i} attachment={att} onMediaClick={onMediaClick} />
               ))}
             </div>
           )}
@@ -324,6 +328,19 @@ const Chatting = ({ selectedUser, onBack }) => {
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [selectedMediaUrl, setSelectedMediaUrl] = useState(null);
+
+  const allMedia = React.useMemo(() => {
+    const media = [];
+    messages.forEach((msg) => {
+      msg.attachments?.forEach((att) => {
+        if (att.type === 'image' || att.type === 'video') {
+          media.push(att);
+        }
+      });
+    });
+    return media;
+  }, [messages]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -797,6 +814,7 @@ const Chatting = ({ selectedUser, onBack }) => {
                 authUser={authUser}
                 onContextMenu={handleContextMenu}
                 onReact={handleReact}
+                onMediaClick={(url) => setSelectedMediaUrl(url)}
               />
             </React.Fragment>
           );
@@ -993,6 +1011,15 @@ const Chatting = ({ selectedUser, onBack }) => {
       {/* ── Click outside to close emoji ─────────────────────────────────── */}
       {showEmojiPicker && (
         <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
+      )}
+
+      {/* Media Viewer Modal */}
+      {selectedMediaUrl && (
+        <MediaViewerModal
+          mediaList={allMedia}
+          initialIndex={allMedia.findIndex(m => m.url === selectedMediaUrl)}
+          onClose={() => setSelectedMediaUrl(null)}
+        />
       )}
     </div>
   );
