@@ -6,10 +6,12 @@ import toast from "react-hot-toast";
 import api from "../config/api";
 import useAuthStore from "../store/useAuthStore";
 import { useGoogleAuth } from "../config/GoogleAuth";
+import ForgotPasswordModal from "../components/ForgotPasswordModal";
 
 const Login = () => {
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -136,12 +138,13 @@ const Login = () => {
             <div className="form-control w-full mb-6">
               <label className="label">
                 <span className="label-text font-semibold">Password</span>
-                <a
-                  href="#"
-                  className="label-text-alt link link-hover text-primary"
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="label-text-alt link link-hover text-primary font-medium"
                 >
                   Forgot password?
-                </a>
+                </button>
               </label>
               <label className="input input-bordered border-base-300 flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
                 <FiLock className="text-base-content/50" />
@@ -205,6 +208,12 @@ const Login = () => {
           </p>
         </div>
       </motion.div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        initialEmail={formData.email}
+      />
     </div>
   );
 };

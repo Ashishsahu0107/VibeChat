@@ -1,6 +1,7 @@
 import User from "../model/user.model.js";
 import bcrypt from "bcryptjs";
 import generateToken from "../utils/generateToken.js";
+import { sendResetPasswordEmail } from "../utils/sendEmail.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -163,6 +164,93 @@ export const GoogleUserLogin = async (req, res) => {
     });
   } catch (error) {
     console.log("Error in Google Login", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    let { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Please enter your email address" });
+    }
+
+    email = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ error: "Please enter a valid email address" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "No account found with this email address" });
+    }
+
+    // Generate 6 digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
+    user.resetPasswordOtp = hashedOtp;
+    user.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    await user.save();
+
+    const emailResult = await sendResetPasswordEmail(user.email, otp);
+
+    res.status(200).json({
+      message: "Password reset OTP has been sent!",
+      email: user.email,
+      devOtp: emailResult.simulated ? otp : undefined,
+    });
+  } catch (error) {
+    console.error("Error in forgotPassword controller:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    let { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ error: "Email, OTP and new password are required" });
+    }
+
+    email = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters long" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!user.resetPasswordOtp || !user.resetPasswordExpires) {
+      return res.status(400).json({ error: "No password reset was requested or OTP has expired" });
+    }
+
+    if (new Date() > new Date(user.resetPasswordExpires)) {
+      user.resetPasswordOtp = null;
+      user.resetPasswordExpires = null;
+      await user.save();
+      return res.status(400).json({ error: "OTP has expired. Please request a new one." });
+    }
+
+    const isMatch = await bcrypt.compare(otp.trim(), user.resetPasswordOtp);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid OTP code. Please check and try again." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.resetPasswordOtp = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    res.status(200).json({
+      message: "Password has been reset successfully! You can now log in.",
+    });
+  } catch (error) {
+    console.error("Error in resetPassword controller:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

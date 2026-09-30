@@ -18,6 +18,8 @@ const userSchema = new mongoose.Schema(
       lastSeenVisible: { type: Boolean, default: true },
       soundEnabled: { type: Boolean, default: true },
     },
+    resetPasswordOtp: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null },
   },
   { timestamps: true },
 );

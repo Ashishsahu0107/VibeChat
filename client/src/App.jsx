@@ -9,6 +9,7 @@ import GroupChats from "./pages/GroupChats";
 import Chat from "./pages/Chat";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import Settings from "./pages/Settings";
 import { Toaster } from "react-hot-toast";
 import useAuthStore from "./store/useAuthStore";
@@ -62,6 +63,10 @@ const AppLayout = ({ authUser }) => {
         <Route
           path="/register"
           element={!authUser ? <Register /> : <Navigate to="/chat" />}
+        />
+        <Route
+          path="/forgot-password"
+          element={!authUser ? <ForgotPassword /> : <Navigate to="/chat" />}
         />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
