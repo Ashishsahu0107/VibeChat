@@ -16,7 +16,7 @@ import useChatStore from "./store/useChatStore";
 import IncomingCallModal from "./components/chat/IncomingCallModal";
 
 // Routes that should NOT show the navbar
-const NO_NAVBAR_ROUTES = ["/chat"];
+const NO_NAVBAR_ROUTES = ["/chat", "/status", "/media-viewer", "/message"];
 
 const AppLayout = ({ authUser }) => {
   const location = useLocation();
@@ -32,11 +32,27 @@ const AppLayout = ({ authUser }) => {
         <Route path="/media-sharing" element={<MediaSharing />} />
         <Route path="/group-chats" element={<GroupChats />} />
         <Route
-          path="/settings"
+          path="/settings/*"
           element={authUser ? <Settings /> : <Navigate to="/login" />}
         />
         <Route
-          path="/chat"
+          path="/profile/*"
+          element={authUser ? <Settings /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/chat/*"
+          element={authUser ? <Chat /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/status/*"
+          element={authUser ? <Chat /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/media-viewer/*"
+          element={authUser ? <Chat /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/message/*"
           element={authUser ? <Chat /> : <Navigate to="/login" />}
         />
         <Route
