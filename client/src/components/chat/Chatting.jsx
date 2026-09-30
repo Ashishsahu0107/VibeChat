@@ -883,7 +883,7 @@ const Chatting = ({ selectedUser, onBack }) => {
       )}
 
       {/* ── Composer ─────────────────────────────────────────────────────── */}
-      <div className="shrink-0 bg-base-100 border-t border-base-300">
+      <div className="shrink-0 bg-base-100 border-t border-base-300 pb-[env(safe-area-inset-bottom,0px)]">
         {/* Edit Banner */}
         {editingMessage && (
           <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border-b border-primary/20">

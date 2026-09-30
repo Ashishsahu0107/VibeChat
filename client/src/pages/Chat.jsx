@@ -65,7 +65,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex bg-base-200 overflow-hidden">
+    <div className="h-screen h-[100dvh] flex bg-base-200 overflow-hidden">
       {/* ── Desktop Left Icon Nav ───────────────────────────────────────────── */}
       <div className="hidden md:flex flex-col items-center py-4 bg-base-100 border-r border-base-300 w-[72px] shrink-0 justify-between">
         <div className="flex flex-col gap-2 w-full items-center">
@@ -97,7 +97,7 @@ const Chat = () => {
       </div>
 
       {/* ── Main Layout ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 h-full overflow-hidden pb-[4.5rem] md:pb-0">
+      <div className={`flex flex-1 h-full overflow-hidden ${selectedChat ? 'pb-0' : 'pb-[4.5rem]'} md:pb-0`}>
         {/* Sidebar */}
         <div
           className={`shrink-0 border-r border-base-300 transition-all duration-200 md:w-[320px] lg:w-[360px] xl:w-[400px] ${
@@ -142,7 +142,7 @@ const Chat = () => {
       {/* ── Mobile Bottom Nav ────────────────────────────────────────────────── */}
       <div
         className={`md:hidden fixed bottom-0 left-0 right-0 bg-base-100/95 backdrop-blur-md border-t border-base-300 z-50 transition-transform duration-200 ${
-          selectedChat ? 'translate-y-full' : 'translate-y-0'
+          selectedChat ? 'translate-y-full pointer-events-none' : 'translate-y-0'
         }`}
       >
         <div className="flex justify-around items-center px-4 py-2 pb-safe">
