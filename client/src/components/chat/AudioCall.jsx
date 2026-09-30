@@ -80,7 +80,10 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
           setIsConnecting(false);
           startTimer();
         } else {
-          const offer = await peer.createOffer();
+          const offer = await peer.createOffer({
+            offerToReceiveVideo: false,
+            offerToReceiveAudio: true
+          });
           await peer.setLocalDescription(offer);
           socket.emit("call-user", {
             userToCall: calleeId,

@@ -11,6 +11,7 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
   const [isConnecting, setIsConnecting] = useState(!isReceiving);
   const [callError, setCallError] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
+  const [iceState, setIceState] = useState("new");
   
   const { socket, incomingIceCandidates } = useSocket();
   const myVideo = useRef(null);
@@ -60,6 +61,11 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
           }
         };
 
+        peer.oniceconnectionstatechange = () => {
+          console.log("ICE State:", peer.iceConnectionState);
+          setIceState(peer.iceConnectionState);
+        };
+
         peer.onicecandidate = (event) => {
           if (event.candidate) {
             socket.emit("ice-candidate", {
@@ -86,9 +92,12 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
           socket.emit("answer-call", { signal: answer, to: callerId });
           setIsConnecting(false);
         } else {
-          const offer = await peer.createOffer();
+          const offer = await peer.createOffer({
+            offerToReceiveVideo: true,
+            offerToReceiveAudio: true
+          });
           await peer.setLocalDescription(offer);
-          socket.emit("call-user", {
+          socket.emit("call-user", {  
             userToCall: calleeId,
             signalData: offer,
             from: authUser._id,
@@ -197,7 +206,14 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
                <p className="mt-2 text-base-content/70">Check browser permissions or ensure a camera/mic is connected.</p>
              </div>
           ) : callAccepted ? (
-            <video playsInline ref={remoteVideo} autoPlay className="w-full h-full object-cover" />
+            <>
+              <video playsInline ref={remoteVideo} autoPlay className="w-full h-full object-cover" />
+              {iceState !== "connected" && iceState !== "completed" && (
+                <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-mono backdrop-blur-md">
+                  Network: {iceState}...
+                </div>
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-white">
               <div className="avatar mb-4">
