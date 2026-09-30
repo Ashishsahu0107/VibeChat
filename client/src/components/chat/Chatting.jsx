@@ -1060,14 +1060,22 @@ const Chatting = ({ selectedUser, onBack }) => {
           <div className="relative">
             <button
               type="button"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="p-2 text-base-content/60 hover:text-base-content hover:bg-base-200 rounded-full transition-colors"
+              onClick={() => {
+                setShowEmojiPicker(!showEmojiPicker);
+                setShowAttachmentMenu(false);
+              }}
+              className={`p-2 rounded-full transition-colors ${
+                showEmojiPicker
+                  ? "bg-primary text-primary-content"
+                  : "text-base-content/60 hover:text-base-content hover:bg-base-200"
+              }`}
+              title="Emoji"
             >
               <FiSmile size={22} />
             </button>
             {showEmojiPicker && (
-              <div className="absolute bottom-12 left-0 z-50">
-                <EmojiPicker onEmojiClick={handleEmojiClick} theme="auto" height={380} width={320} />
+              <div className="fixed sm:absolute bottom-16 left-2 right-2 sm:left-0 sm:right-auto z-50 max-w-[340px] shadow-2xl rounded-2xl overflow-hidden border border-base-300">
+                <EmojiPicker onEmojiClick={handleEmojiClick} theme="auto" height={360} width="100%" />
               </div>
             )}
           </div>
