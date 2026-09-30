@@ -180,9 +180,15 @@ export const forgotPassword = async (req, res) => {
       return res.status(400).json({ error: "Please enter a valid email address" });
     }
 
-    const user = await User.findOne({ email });
+    const cleanEmail = email.trim();
+    const user = await User.findOne({
+      $or: [
+        { email: cleanEmail.toLowerCase() },
+        { email: { $regex: new RegExp(`^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
+      ],
+    });
     if (!user) {
-      return res.status(404).json({ error: "No account found with this email address" });
+      return res.status(400).json({ error: "No account found with this email address. Please check your email or sign up." });
     }
 
     // Generate 6 digit numeric OTP
@@ -219,9 +225,15 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ error: "Password must be at least 6 characters long" });
     }
 
-    const user = await User.findOne({ email });
+    const cleanEmail = email.trim();
+    const user = await User.findOne({
+      $or: [
+        { email: cleanEmail.toLowerCase() },
+        { email: { $regex: new RegExp(`^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
+      ],
+    });
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(400).json({ error: "User account not found with this email address." });
     }
 
     if (!user.resetPasswordOtp || !user.resetPasswordExpires) {

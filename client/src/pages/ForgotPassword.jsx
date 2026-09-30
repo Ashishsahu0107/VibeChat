@@ -15,6 +15,7 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [devOtp, setDevOtp] = useState(null);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -30,6 +31,7 @@ const ForgotPassword = () => {
 
   const handleSendOtp = async (e) => {
     e?.preventDefault();
+    setErrorMessage("");
     if (!email.trim()) return toast.error("Please enter your email");
     if (!validateEmail(email)) return toast.error("Please enter a valid email address");
 
@@ -43,7 +45,9 @@ const ForgotPassword = () => {
       setResendCooldown(60);
       setStep(2);
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to send reset code");
+      const msg = error.response?.data?.error || "Failed to send reset code. Please check your network.";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -110,6 +114,12 @@ const ForgotPassword = () => {
               <p className="text-center text-base-content/70 mb-6 text-sm">
                 Enter your registered email to receive a 6-digit verification code.
               </p>
+
+              {errorMessage && (
+                <div className="bg-error/10 border border-error/20 rounded-2xl p-3 mb-4 text-xs text-error font-medium text-center leading-relaxed">
+                  {errorMessage}
+                </div>
+              )}
 
               <form onSubmit={handleSendOtp} className="space-y-4">
                 <div className="form-control w-full">

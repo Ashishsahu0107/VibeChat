@@ -13,6 +13,7 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
   const [loading, setLoading] = useState(false);
   const [devOtp, setDevOtp] = useState(null);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Sync initialEmail when modal opens
   useEffect(() => {
@@ -23,6 +24,7 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
       setNewPassword("");
       setConfirmPassword("");
       setDevOtp(null);
+      setErrorMessage("");
     }
   }, [isOpen, initialEmail]);
 
@@ -53,6 +55,7 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
   // Step 1: Send OTP
   const handleSendOtp = async (e) => {
     e?.preventDefault();
+    setErrorMessage("");
     if (!email.trim()) {
       toast.error("Please enter your email");
       return;
@@ -74,7 +77,9 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
       setResendCooldown(60);
       setStep(2);
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to send reset code");
+      const msg = error.response?.data?.error || "Failed to send reset code. Please check your network.";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -173,6 +178,12 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
             <p className="text-sm text-center text-base-content/70 mb-6 leading-relaxed">
               Enter your registered email address and we'll send you a 6-digit code to reset your password.
             </p>
+
+            {errorMessage && (
+              <div className="bg-error/10 border border-error/20 rounded-2xl p-3 mb-4 text-xs text-error font-medium text-center leading-relaxed">
+                {errorMessage}
+              </div>
+            )}
 
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div className="form-control w-full">

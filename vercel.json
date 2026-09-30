@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://vibechat-y9gd.onrender.com/api/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }
