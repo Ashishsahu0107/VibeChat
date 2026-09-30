@@ -81,6 +81,7 @@ export const SocketProvider = ({ children }) => {
   const [callerId, setCallerId] = useState("");
   const [isVideoCall, setIsVideoCall] = useState(false);
   const [callChatId, setCallChatId] = useState(null);
+  const [incomingIceCandidates, setIncomingIceCandidates] = useState([]);
 
 
 
@@ -282,7 +283,12 @@ export const SocketProvider = ({ children }) => {
       setCallerName(data.name);
       setIsVideoCall(data.isVideoCall);
       setCallChatId(data.chatId);
+      setIncomingIceCandidates([]); // Reset candidates on new call
       playNotificationSound();
+    });
+
+    newSocket.on("ice-candidate", (candidate) => {
+      setIncomingIceCandidates((prev) => [...prev, candidate]);
     });
 
     return () => {
@@ -297,6 +303,7 @@ export const SocketProvider = ({ children }) => {
     setCallerName("");
     setIsVideoCall(false);
     setCallChatId(null);
+    setIncomingIceCandidates([]);
   };
 
   return (
@@ -314,6 +321,7 @@ export const SocketProvider = ({ children }) => {
         callChatId,
         clearCall,
         playNotificationSound,
+        incomingIceCandidates,
       }}
     >
       {children}

@@ -12,7 +12,7 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
   const [callError, setCallError] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   
-  const { socket } = useSocket();
+  const { socket, incomingIceCandidates } = useSocket();
   const userAudio = useRef(null);
   const peerRef = useRef(null);
   const streamRef = useRef(null);
@@ -36,6 +36,9 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
 
         peer.ontrack = (event) => {
           setRemoteStream(event.streams[0]);
+          if (userAudio.current) {
+            userAudio.current.srcObject = event.streams[0];
+          }
         };
 
         peer.onicecandidate = (event) => {
@@ -49,6 +52,13 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
 
         if (isReceiving) {
           await peer.setRemoteDescription(new RTCSessionDescription(callerSignal));
+          
+          if (incomingIceCandidates && incomingIceCandidates.length > 0) {
+            incomingIceCandidates.forEach(async (c) => {
+              try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+            });
+          }
+
           const answer = await peer.createAnswer();
           await peer.setLocalDescription(answer);
           socket.emit("answer-call", { signal: answer, to: callerId });

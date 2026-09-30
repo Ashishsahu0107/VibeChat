@@ -12,7 +12,7 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
   const [callError, setCallError] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   
-  const { socket } = useSocket();
+  const { socket, incomingIceCandidates } = useSocket();
   const myVideo = useRef(null);
   const userVideo = useRef(null);
   const peerRef = useRef(null);
@@ -53,6 +53,14 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
 
         if (isReceiving) {
           await peer.setRemoteDescription(new RTCSessionDescription(callerSignal));
+          
+          // Add buffered ICE candidates
+          if (incomingIceCandidates && incomingIceCandidates.length > 0) {
+            incomingIceCandidates.forEach(async (c) => {
+              try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+            });
+          }
+
           const answer = await peer.createAnswer();
           await peer.setLocalDescription(answer);
           socket.emit("answer-call", { signal: answer, to: callerId });
