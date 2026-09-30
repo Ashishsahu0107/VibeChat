@@ -14,9 +14,11 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
   
   const { socket, incomingIceCandidates } = useSocket();
   const myVideo = useRef(null);
+  const remoteVideo = useRef(null);
   const userVideo = useRef(null);
   const peerRef = useRef(null);
   const streamRef = useRef(null);
+  const pendingCandidates = useRef([]);
 
   useEffect(() => {
     const initCall = async () => {
@@ -51,7 +53,11 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
         });
 
         peer.ontrack = (event) => {
+          console.log("WebRTC: Remote track received!", event.streams[0]);
           setRemoteStream(event.streams[0]);
+          if (remoteVideo.current) {
+            remoteVideo.current.srcObject = event.streams[0];
+          }
         };
 
         peer.onicecandidate = (event) => {
@@ -66,12 +72,14 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
         if (isReceiving) {
           await peer.setRemoteDescription(new RTCSessionDescription(callerSignal));
           
-          // Add buffered ICE candidates
+          // Drain any candidates that arrived while we were setting up
           if (incomingIceCandidates && incomingIceCandidates.length > 0) {
-            incomingIceCandidates.forEach(async (c) => {
-              try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
-            });
+            incomingIceCandidates.forEach(c => pendingCandidates.current.push(c));
           }
+          pendingCandidates.current.forEach(async (c) => {
+            try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+          });
+          pendingCandidates.current = [];
 
           const answer = await peer.createAnswer();
           await peer.setLocalDescription(answer);
@@ -102,15 +110,26 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
       setIsConnecting(false);
       if (peerRef.current && !peerRef.current.currentRemoteDescription) {
         await peerRef.current.setRemoteDescription(new RTCSessionDescription(signal));
+        
+        // Drain buffered candidates received from the Callee
+        pendingCandidates.current.forEach(async (c) => {
+          try { await peerRef.current.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+        });
+        pendingCandidates.current = [];
       }
     });
 
     socket.on("ice-candidate", async (candidate) => {
       if (peerRef.current) {
-        try {
-          await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (e) {
-          console.error("Error adding received ice candidate", e);
+        if (peerRef.current.remoteDescription) {
+          try {
+            await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+          } catch (e) {
+            console.error("Error adding received ice candidate", e);
+          }
+        } else {
+          // Remote description not set yet, buffer the candidate
+          pendingCandidates.current.push(candidate);
         }
       }
     });
@@ -126,6 +145,14 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
       endCall();
     };
   }, []);
+
+  // Safely attach stream to video element when it mounts
+  useEffect(() => {
+    if (remoteVideo.current && remoteStream) {
+      remoteVideo.current.srcObject = remoteStream;
+      remoteVideo.current.play().catch(e => console.error("Autoplay prevented:", e));
+    }
+  }, [remoteStream, callAccepted]);
 
   const endCall = () => {
     if (streamRef.current) {
@@ -170,7 +197,7 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
                <p className="mt-2 text-base-content/70">Check browser permissions or ensure a camera/mic is connected.</p>
              </div>
           ) : callAccepted ? (
-            <video playsInline ref={(node) => { if(node) node.srcObject = remoteStream }} autoPlay className="w-full h-full object-cover" />
+            <video playsInline ref={remoteVideo} autoPlay className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-white">
               <div className="avatar mb-4">

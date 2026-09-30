@@ -17,6 +17,7 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
   const peerRef = useRef(null);
   const streamRef = useRef(null);
   const timerRef = useRef(null);
+  const pendingCandidates = useRef([]);
 
   useEffect(() => {
     const initCall = async () => {
@@ -66,10 +67,12 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
           await peer.setRemoteDescription(new RTCSessionDescription(callerSignal));
           
           if (incomingIceCandidates && incomingIceCandidates.length > 0) {
-            incomingIceCandidates.forEach(async (c) => {
-              try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
-            });
+            incomingIceCandidates.forEach(c => pendingCandidates.current.push(c));
           }
+          pendingCandidates.current.forEach(async (c) => {
+            try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+          });
+          pendingCandidates.current = [];
 
           const answer = await peer.createAnswer();
           await peer.setLocalDescription(answer);
@@ -102,15 +105,24 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
       startTimer();
       if (peerRef.current && !peerRef.current.currentRemoteDescription) {
         await peerRef.current.setRemoteDescription(new RTCSessionDescription(signal));
+        
+        pendingCandidates.current.forEach(async (c) => {
+          try { await peerRef.current.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+        });
+        pendingCandidates.current = [];
       }
     });
 
     socket.on("ice-candidate", async (candidate) => {
       if (peerRef.current) {
-        try {
-          await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (e) {
-          console.error("Error adding received ice candidate", e);
+        if (peerRef.current.remoteDescription) {
+          try {
+            await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+          } catch (e) {
+            console.error("Error adding received ice candidate", e);
+          }
+        } else {
+          pendingCandidates.current.push(candidate);
         }
       }
     });
@@ -126,6 +138,13 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
       endCall();
     };
   }, []);
+
+  useEffect(() => {
+    if (userAudio.current && remoteStream) {
+      userAudio.current.srcObject = remoteStream;
+      userAudio.current.play().catch(e => console.error("Audio autoplay prevented:", e));
+    }
+  }, [remoteStream, callAccepted]);
 
   const startTimer = () => {
     timerRef.current = setInterval(() => {
