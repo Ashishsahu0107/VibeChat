@@ -16,6 +16,17 @@ import CustomAudioPlayer from "./CustomAudioPlayer";
 import ChatInfoPanel from "./ChatInfoPanel";
 import MediaViewerModal from "./MediaViewerModal";
 import toast from "react-hot-toast";
+import {
+  IoDocumentText,
+  IoImages,
+  IoCamera,
+  IoHeadset,
+  IoPerson,
+  IoBarChart,
+  IoCalendar,
+  IoSparkles
+} from "react-icons/io5";
+import { PollModal, ContactModal, EventModal } from "./AttachmentModals";
 
 // ── Date Separator ─────────────────────────────────────────────────────────────
 const DateSeparator = ({ date }) => {
@@ -321,7 +332,7 @@ const Chatting = ({ selectedUser, onBack }) => {
   const {
     messages, fetchMessages, sendMessage, uploadAttachment, messagesLoading,
     editMessage, deleteMessage, reactToMessage, starMessage, searchMessages,
-    loadMoreMessages, messagesPagination, markAsRead,
+    loadMoreMessages, messagesPagination, markAsRead, chats,
   } = useChatStore();
   const { authUser } = useAuthStore();
   const { socket, onlineUsers, typingUsers, playNotificationSound } = useSocket();
@@ -355,15 +366,107 @@ const Chatting = ({ selectedUser, onBack }) => {
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [outgoingCallType, setOutgoingCallType] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [showPollModal, setShowPollModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
 
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
+  const documentInputRef = useRef(null);
+  const photoVideoInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const audioInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const isSendingRef = useRef(false);
+
+  const clearFileInputs = () => {
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (documentInputRef.current) documentInputRef.current.value = "";
+    if (photoVideoInputRef.current) photoVideoInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+    if (audioInputRef.current) audioInputRef.current.value = "";
+  };
+
+  const contactsList = React.useMemo(() => {
+    const list = [];
+    const seen = new Set();
+    chats?.forEach((c) => {
+      c.users?.forEach((u) => {
+        if (String(u._id) !== String(authUser?._id) && !seen.has(String(u._id))) {
+          seen.add(String(u._id));
+          list.push(u);
+        }
+      });
+    });
+    return list;
+  }, [chats, authUser]);
+
+  const handleSendCustomMessage = async (customContent) => {
+    if (!customContent?.trim()) return;
+    try {
+      await sendMessage(customContent.trim(), chatId, []);
+      playNotificationSound("send");
+      scrollToBottom();
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to send");
+    }
+  };
+
+  const attachmentOptions = [
+    {
+      id: "document",
+      label: "Document",
+      icon: <IoDocumentText size={20} className="text-[#8b5cf6]" />,
+      action: () => documentInputRef.current?.click(),
+    },
+    {
+      id: "photos_videos",
+      label: "Photos & videos",
+      icon: <IoImages size={20} className="text-[#0284c7]" />,
+      action: () => photoVideoInputRef.current?.click(),
+    },
+    {
+      id: "camera",
+      label: "Camera",
+      icon: <IoCamera size={20} className="text-[#ec4899]" />,
+      action: () => cameraInputRef.current?.click(),
+    },
+    {
+      id: "audio",
+      label: "Audio",
+      icon: <IoHeadset size={20} className="text-[#f97316]" />,
+      action: () => audioInputRef.current?.click(),
+    },
+    {
+      id: "contact",
+      label: "Contact",
+      icon: <IoPerson size={20} className="text-[#06b6d4]" />,
+      action: () => setShowContactModal(true),
+    },
+    {
+      id: "poll",
+      label: "Poll",
+      icon: <IoBarChart size={20} className="text-[#eab308]" />,
+      action: () => setShowPollModal(true),
+    },
+    {
+      id: "event",
+      label: "Event",
+      icon: <IoCalendar size={20} className="text-[#f43f5e]" />,
+      action: () => setShowEventModal(true),
+    },
+    {
+      id: "sticker",
+      label: "New sticker",
+      icon: <IoSparkles size={20} className="text-[#10b981]" />,
+      action: () => setShowEmojiPicker(true),
+    },
+  ];
 
   const chatId = selectedUser?._id;
 
@@ -447,7 +550,7 @@ const Chatting = ({ selectedUser, onBack }) => {
     const isImageOrVideo = file.type.startsWith("image/") || file.type.startsWith("video/");
     if (isImageOrVideo && file.size > MAX_MEDIA_SIZE) {
       toast.error("Image and video size must be 5 MB or less");
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      clearFileInputs();
       return;
     }
 
@@ -549,7 +652,7 @@ const Chatting = ({ selectedUser, onBack }) => {
       setSelectedFile(null);
       setFilePreview(null);
       setReplyTo(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      clearFileInputs();
       inputRef.current?.focus();
       scrollToBottom();
     } catch (err) {
@@ -933,7 +1036,7 @@ const Chatting = ({ selectedUser, onBack }) => {
               <span className="text-sm truncate max-w-[200px] text-base-content/70">{filePreview.name}</span>
             )}
             <button
-              onClick={() => { setSelectedFile(null); setFilePreview(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+              onClick={() => { setSelectedFile(null); setFilePreview(null); clearFileInputs(); }}
               className="ml-auto p-1.5 hover:bg-base-300 rounded-full"
             >
               <FiTrash size={16} className="text-error" />
@@ -969,21 +1072,85 @@ const Chatting = ({ selectedUser, onBack }) => {
             )}
           </div>
 
-          {/* Attachment */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.txt"
-            onChange={handleFileChange}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-base-content/60 hover:text-base-content hover:bg-base-200 rounded-full transition-colors"
-          >
-            <FiPaperclip size={20} />
-          </button>
+          {/* Attachment Menu Popup */}
+          <div className="relative">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.txt"
+              onChange={handleFileChange}
+            />
+            <input
+              type="file"
+              ref={documentInputRef}
+              className="hidden"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.csv"
+              onChange={handleFileChange}
+            />
+            <input
+              type="file"
+              ref={photoVideoInputRef}
+              className="hidden"
+              accept="image/*,video/*"
+              onChange={handleFileChange}
+            />
+            <input
+              type="file"
+              ref={cameraInputRef}
+              className="hidden"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileChange}
+            />
+            <input
+              type="file"
+              ref={audioInputRef}
+              className="hidden"
+              accept="audio/*"
+              onChange={handleFileChange}
+            />
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowAttachmentMenu((prev) => !prev);
+                setShowEmojiPicker(false);
+              }}
+              className={`p-2 rounded-full transition-colors ${
+                showAttachmentMenu
+                  ? "bg-primary text-primary-content"
+                  : "text-base-content/60 hover:text-base-content hover:bg-base-200"
+              }`}
+              title="Attach"
+            >
+              <FiPaperclip size={20} />
+            </button>
+
+            {/* Popup Menu */}
+            {showAttachmentMenu && (
+              <div className="absolute bottom-12 left-0 z-50 w-52 py-2 bg-base-100/95 backdrop-blur-md rounded-2xl shadow-2xl border border-base-300 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
+                {attachmentOptions.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      setShowAttachmentMenu(false);
+                      opt.action();
+                    }}
+                    className="flex items-center gap-3.5 px-4 py-2 hover:bg-base-200 text-left transition-colors cursor-pointer group"
+                  >
+                    <span className="w-5 h-5 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
+                      {opt.icon}
+                    </span>
+                    <span className="text-[14px] font-medium text-base-content/90 group-hover:text-base-content">
+                      {opt.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Text Input */}
           <div className="flex-1 bg-base-200 rounded-full px-4 py-2 flex items-center min-h-[44px]">
@@ -1032,10 +1199,34 @@ const Chatting = ({ selectedUser, onBack }) => {
         </div>
       </div>
 
-      {/* ── Click outside to close emoji ─────────────────────────────────── */}
-      {showEmojiPicker && (
-        <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
+      {/* ── Click outside to close emoji / attachment menu ─────────────────── */}
+      {(showEmojiPicker || showAttachmentMenu) && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => {
+            setShowEmojiPicker(false);
+            setShowAttachmentMenu(false);
+          }}
+        />
       )}
+
+      {/* Attachment Modals */}
+      <PollModal
+        isOpen={showPollModal}
+        onClose={() => setShowPollModal(false)}
+        onSendPoll={handleSendCustomMessage}
+      />
+      <ContactModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        onSendContact={handleSendCustomMessage}
+        contacts={contactsList}
+      />
+      <EventModal
+        isOpen={showEventModal}
+        onClose={() => setShowEventModal(false)}
+        onSendEvent={handleSendCustomMessage}
+      />
 
       {/* Media Viewer Modal */}
       {selectedMediaUrl && (
