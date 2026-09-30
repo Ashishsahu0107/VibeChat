@@ -7,7 +7,7 @@ const generateToken = (userId, res) => {
 
   res.cookie("jwt", token, {
     httpOnly: true, // prevent XSS attacks
-    sameSite: "strict", // CSRF protection
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict", // cross-site allowed in prod
     secure: process.env.NODE_ENV === "production",
   });
 };
