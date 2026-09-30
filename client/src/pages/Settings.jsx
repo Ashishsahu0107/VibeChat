@@ -63,6 +63,7 @@ const Settings = () => {
     const file = e.target.files[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) return toast.error('Please select an image');
+    if (file.size > 5 * 1024 * 1024) return toast.error('Image size must be 5 MB or less');
     
     const reader = new FileReader();
     reader.addEventListener('load', () => setCropImageSrc(reader.result));

@@ -45,6 +45,11 @@ const ChatInfoPanel = ({ chat, onClose, authUser }) => {
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be 5 MB or less");
+      e.target.value = "";
+      return;
+    }
     setIsUploadingAvatar(true);
     try {
       const formData = new FormData();

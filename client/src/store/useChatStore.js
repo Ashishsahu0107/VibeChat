@@ -69,6 +69,10 @@ const useChatStore = create((set, get) => ({
   // ── Upload Attachment ──────────────────────────────────────────────────────
   uploadAttachment: async (file) => {
     try {
+      const isMedia = file.type?.startsWith("image/") || file.type?.startsWith("video/");
+      if (isMedia && file.size > 5 * 1024 * 1024) {
+        throw new Error("Image or video size cannot exceed 5 MB");
+      }
       const formData = new FormData();
       formData.append('file', file);
       const res = await api.post('/messages/upload/file', formData);

@@ -100,6 +100,10 @@ export const uploadProfileImage = async (req, res) => {
       return res.status(400).json({ error: "No image file provided" });
     }
 
+    if (req.file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: "Image size must not exceed 5 MB" });
+    }
+
     const b64 = Buffer.from(req.file.buffer).toString("base64");
     const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 

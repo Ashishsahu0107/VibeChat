@@ -363,6 +363,7 @@ const Chatting = ({ selectedUser, onBack }) => {
   const audioChunksRef = useRef([]);
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
+  const isSendingRef = useRef(false);
 
   const chatId = selectedUser?._id;
 
@@ -441,6 +442,15 @@ const Chatting = ({ selectedUser, onBack }) => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    const MAX_MEDIA_SIZE = 5 * 1024 * 1024; // 5 MB
+    const isImageOrVideo = file.type.startsWith("image/") || file.type.startsWith("video/");
+    if (isImageOrVideo && file.size > MAX_MEDIA_SIZE) {
+      toast.error("Image and video size must be 5 MB or less");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     setSelectedFile(file);
     if (file.type.startsWith("image/")) {
       setFilePreview({ type: "image", url: URL.createObjectURL(file) });
@@ -489,6 +499,8 @@ const Chatting = ({ selectedUser, onBack }) => {
   const handleSend = async (e) => {
     e?.preventDefault();
 
+    if (isUploading || isSendingRef.current) return;
+
     if (editingMessage) {
       if (!content.trim()) return;
       try {
@@ -504,6 +516,15 @@ const Chatting = ({ selectedUser, onBack }) => {
 
     if (!content.trim() && !recordedAudio && !selectedFile) return;
 
+    if (selectedFile) {
+      const isImageOrVideo = selectedFile.type.startsWith("image/") || selectedFile.type.startsWith("video/");
+      if (isImageOrVideo && selectedFile.size > 5 * 1024 * 1024) {
+        toast.error("Image and video size must be 5 MB or less");
+        return;
+      }
+    }
+
+    isSendingRef.current = true;
     socket?.emit("stop-typing", { chatId, userId: authUser._id });
     setTyping(false);
 
@@ -532,9 +553,10 @@ const Chatting = ({ selectedUser, onBack }) => {
       inputRef.current?.focus();
       scrollToBottom();
     } catch (err) {
-      toast.error("Failed to send message");
+      toast.error(err.response?.data?.error || err.message || "Failed to send message");
     } finally {
       setIsUploading(false);
+      isSendingRef.current = false;
     }
   };
 

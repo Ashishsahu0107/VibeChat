@@ -11,6 +11,18 @@ export const createStatus = async (req, res) => {
       return res.status(400).json({ message: "Type and content are required" });
     }
 
+    // Debounce duplicate status submissions within 10 seconds
+    const recentDuplicate = await Status.findOne({
+      sender: req.user._id,
+      type,
+      content,
+      createdAt: { $gt: new Date(Date.now() - 10000) },
+    }).populate("sender", "fullName profilePic");
+
+    if (recentDuplicate) {
+      return res.status(200).json(recentDuplicate);
+    }
+
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
 
     let status = await Status.create({

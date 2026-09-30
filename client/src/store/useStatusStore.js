@@ -31,12 +31,18 @@ const useStatusStore = create((set, get) => ({
   },
 
   createStatus: async (statusData) => {
+    if (get().isCreating) return;
     set({ isCreating: true });
     try {
       const res = await api.post("/status", statusData);
-      set((state) => ({
-        myStatuses: [...state.myStatuses, res.data]
-      }));
+      set((state) => {
+        if (state.myStatuses.some((s) => s._id === res.data._id)) {
+          return {};
+        }
+        return {
+          myStatuses: [...state.myStatuses, res.data]
+        };
+      });
       toast.success("Status posted!");
     } catch (error) {
       console.error("Error posting status:", error);

@@ -145,6 +145,9 @@ export const updateGroupAvatar = async (req, res) => {
   const { chatId } = req.params;
   try {
     if (!req.file) return res.status(400).json({ message: "No image provided" });
+    if (req.file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({ message: "Image size must not exceed 5 MB" });
+    }
 
     const chat = await Chat.findById(chatId);
     if (!chat) return res.status(404).json({ message: "Chat Not Found" });

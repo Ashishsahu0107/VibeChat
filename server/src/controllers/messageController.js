@@ -309,7 +309,12 @@ export const uploadAttachment = async (req, res) => {
       return res.status(400).json({ error: "No file provided" });
     }
 
-    const mimeType = req.file.mimetype;
+    const mimeType = req.file.mimetype || "";
+    const isImageOrVideo = mimeType.startsWith("image/") || mimeType.startsWith("video/");
+    if (isImageOrVideo && req.file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: "Image and video files must not exceed 5 MB" });
+    }
+
     let resourceType = "auto";
     let attachmentType = "document";
 
