@@ -76,15 +76,18 @@ const __dirname = path.resolve();
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../client/dist")));
   // Catch-all route for frontend
-  app.get("*", (req, res) => {
+  app.use((req, res, next) => {
+    if (req.originalUrl.startsWith("/api")) {
+      return next(); // Let API 404s fall through
+    }
     res.sendFile(path.resolve(__dirname, "../client/dist", "index.html"));
   });
-} else {
-  // ── 404 Handler ────────────────────────────────────────────────────────────
-  app.use((req, res) => {
-    res.status(404).json({ error: "Route not found" });
-  });
 }
+
+// ── 404 Handler ────────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
 
 // ── Error Handler ──────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
