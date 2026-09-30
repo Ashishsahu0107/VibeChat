@@ -110,9 +110,8 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const socketUrl = window.location.origin.includes("localhost")
-      ? import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:4500`
-      : "/";
+    const socketUrl = import.meta.env.VITE_API_BASE_URL || 
+      (window.location.origin.includes("localhost") ? `http://${window.location.hostname}:4500` : "/");
 
     const newSocket = io(socketUrl, {
       withCredentials: true,
