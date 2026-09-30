@@ -16,13 +16,43 @@ const Register = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
+  const validateEmail = (emailStr) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(emailStr).trim().toLowerCase());
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!name.trim()) {
+      toast.error("Please enter your full name");
+      return;
+    }
+
+    if (!email.trim()) {
+      toast.error("Please enter your email");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address (e.g. user@example.com)");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await api.post("/auth/register", { fullName: name, email, password });
+      const res = await api.post("/auth/register", {
+        fullName: name.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+      });
       setAuthUser(res.data);
-      toast.success(res.data.message);
+      toast.success(res.data.message || "Account created successfully!");
       navigate("/chat");
     } catch (error) {
       toast.error(error.response?.data?.error || "Registration failed");
@@ -37,7 +67,7 @@ const Register = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="card w-full max-w-md bg-base-100 shadow-xl"
+        className="card w-full max-w-md bg-base-100 shadow-xl border border-base-300"
       >
         <div className="card-body">
           <h2 className="text-3xl font-bold text-center text-primary mb-2">Create Account</h2>
@@ -48,7 +78,7 @@ const Register = () => {
               <label className="label">
                 <span className="label-text font-semibold">Full Name</span>
               </label>
-              <label className="input input-bordered flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
+              <label className="input input-bordered border-base-300 flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
                 <FiUser className="text-base-content/50" />
                 <input 
                   type="text" 
@@ -65,7 +95,7 @@ const Register = () => {
               <label className="label">
                 <span className="label-text font-semibold">Email</span>
               </label>
-              <label className="input input-bordered flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
+              <label className={`input input-bordered flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all ${email && !validateEmail(email) ? 'border-error' : 'border-base-300'}`}>
                 <FiMail className="text-base-content/50" />
                 <input 
                   type="email" 
@@ -76,13 +106,18 @@ const Register = () => {
                   required
                 />
               </label>
+              {email && !validateEmail(email) && (
+                <span className="text-xs text-error mt-1 ml-1">
+                  Please enter a valid email address
+                </span>
+              )}
             </div>
 
             <div className="form-control w-full mb-6">
               <label className="label">
                 <span className="label-text font-semibold">Password</span>
               </label>
-              <label className="input input-bordered flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
+              <label className="input input-bordered border-base-300 flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
                 <FiLock className="text-base-content/50" />
                 <input 
                   type="password" 
@@ -96,7 +131,7 @@ const Register = () => {
               </label>
             </div>
 
-            <button type="submit" onClick={handleSubmit} className="btn btn-primary w-full text-lg mb-4" disabled={loading}>
+            <button type="submit" className="btn btn-primary w-full text-lg mb-4" disabled={loading}>
               {loading ? "Signing up..." : "Sign Up"}
             </button>
           </form>

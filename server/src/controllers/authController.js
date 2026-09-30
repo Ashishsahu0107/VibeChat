@@ -2,12 +2,23 @@ import User from "../model/user.model.js";
 import bcrypt from "bcryptjs";
 import generateToken from "../utils/generateToken.js";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const register = async (req, res) => {
   try {
-    const { fullName, email, password, phone } = req.body;
+    let { fullName, email, password, phone } = req.body;
 
     if (!fullName || !email || !password) {
       return res.status(400).json({ error: "Please fill all fields" });
+    }
+
+    email = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (!email || !EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ error: "Please provide a valid email address" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters long" });
     }
 
     const existingUser = await User.findOne({ email });
@@ -22,7 +33,7 @@ export const register = async (req, res) => {
     const profilePic = `https://ui-avatars.com/api/?name=${fullName.replace(' ', '+')}&background=random`;
 
     const newUser = new User({
-      fullName,
+      fullName: fullName.trim(),
       email,
       password: hashedPassword,
       phone: phone || "",
@@ -50,10 +61,15 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: "Please fill all fields" });
+    }
+
+    email = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (!email || !EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ error: "Please provide a valid email address" });
     }
 
     const user = await User.findOne({ email });
@@ -117,7 +133,11 @@ export const GoogleUserLogin = async (req, res) => {
   try {
     // googleMiddleware.js should attach req.user if token is valid
     // For now, let's just create/login based on req.body
-    const { email, fullName, profilePic } = req.body;
+    let { email, fullName, profilePic } = req.body;
+    email = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
     let user = await User.findOne({ email });
     
     if (!user) {

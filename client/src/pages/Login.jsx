@@ -50,13 +50,37 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const validateEmail = (emailStr) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(emailStr).trim().toLowerCase());
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.email.trim()) {
+      toast.error("Please enter your email");
+      return;
+    }
+
+    if (!validateEmail(formData.email)) {
+      toast.error("Please enter a valid email address (e.g. user@example.com)");
+      return;
+    }
+
+    if (!formData.password) {
+      toast.error("Please enter your password");
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await api.post("/auth/login", formData);
+      const res = await api.post("/auth/login", {
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      });
       setAuthUser(res.data);
-      toast.success(res.data.message);
+      toast.success(res.data.message || "Logged in successfully!");
       navigate("/chat");
     } catch (error) {
       toast.error(error.response?.data?.error || "Login failed");
@@ -75,7 +99,7 @@ const Login = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="card w-full max-w-md bg-base-100 shadow-xl"
+        className="card w-full max-w-md bg-base-100 shadow-xl border border-base-300"
       >
         <div className="card-body">
           <h2 className="text-3xl font-bold text-center text-primary mb-2">
@@ -90,7 +114,7 @@ const Login = () => {
               <label className="label">
                 <span className="label-text font-semibold">Email</span>
               </label>
-              <label className="input input-bordered flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
+              <label className={`input input-bordered flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all ${formData.email && !validateEmail(formData.email) ? 'border-error' : 'border-base-300'}`}>
                 <FiMail className="text-base-content/50" />
                 <input
                   type="email"
@@ -102,6 +126,11 @@ const Login = () => {
                   required
                 />
               </label>
+              {formData.email && !validateEmail(formData.email) && (
+                <span className="text-xs text-error mt-1 ml-1">
+                  Please enter a valid email address
+                </span>
+              )}
             </div>
 
             <div className="form-control w-full mb-6">
@@ -114,7 +143,7 @@ const Login = () => {
                   Forgot password?
                 </a>
               </label>
-              <label className="input input-bordered flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
+              <label className="input input-bordered border-base-300 flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
                 <FiLock className="text-base-content/50" />
                 <input
                   type={showPassword ? "text" : "password"}
