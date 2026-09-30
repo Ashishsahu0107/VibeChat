@@ -32,7 +32,9 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
           { urls: 'stun:stun2.l.google.com:19302' },
           { urls: 'stun:stun3.l.google.com:19302' },
           { urls: 'stun:stun4.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478' }
+          { urls: 'stun:global.stun.twilio.com:3478' },
+          { urls: 'stun:stun.services.mozilla.com' },
+          { urls: 'stun:stun.cloudflare.com:3478' }
         ];
 
         if (import.meta.env.VITE_TURN_URL) {
@@ -70,11 +72,13 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
           await peer.setRemoteDescription(new RTCSessionDescription(callerSignal));
           
           if (incomingIceCandidates && incomingIceCandidates.length > 0) {
-            incomingIceCandidates.forEach(c => pendingCandidates.current.push(c));
+            for (const c of incomingIceCandidates) {
+              try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+            }
           }
-          pendingCandidates.current.forEach(async (c) => {
+          for (const c of pendingCandidates.current) {
             try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
-          });
+          }
           pendingCandidates.current = [];
 
           const answer = await peer.createAnswer();
@@ -105,21 +109,21 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
 
     initCall();
 
-    socket.on("call-accepted", async (signal) => {
+    const handleCallAccepted = async (signal) => {
       setCallAccepted(true);
       setIsConnecting(false);
       startTimer();
       if (peerRef.current && !peerRef.current.currentRemoteDescription) {
         await peerRef.current.setRemoteDescription(new RTCSessionDescription(signal));
         
-        pendingCandidates.current.forEach(async (c) => {
+        for (const c of pendingCandidates.current) {
           try { await peerRef.current.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
-        });
+        }
         pendingCandidates.current = [];
       }
-    });
+    };
 
-    socket.on("ice-candidate", async (candidate) => {
+    const handleIceCandidate = async (candidate) => {
       if (peerRef.current) {
         if (peerRef.current.remoteDescription) {
           try {
@@ -131,16 +135,20 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
           pendingCandidates.current.push(candidate);
         }
       }
-    });
+    };
 
-    socket.on("call-ended", () => {
+    const handleCallEnded = () => {
       endCall();
-    });
+    };
+
+    socket.on("call-accepted", handleCallAccepted);
+    socket.on("ice-candidate", handleIceCandidate);
+    socket.on("call-ended", handleCallEnded);
 
     return () => {
-      socket.off("call-accepted");
-      socket.off("ice-candidate");
-      socket.off("call-ended");
+      socket.off("call-accepted", handleCallAccepted);
+      socket.off("ice-candidate", handleIceCandidate);
+      socket.off("call-ended", handleCallEnded);
       endCall();
     };
   }, []);
@@ -148,7 +156,10 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
   useEffect(() => {
     if (userAudio.current && remoteStream) {
       userAudio.current.srcObject = remoteStream;
-      userAudio.current.play().catch(e => console.error("Audio autoplay prevented:", e));
+      const playPromise = userAudio.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => console.warn("Audio autoplay policy prevented auto-start:", e));
+      }
     }
   }, [remoteStream, callAccepted]);
 

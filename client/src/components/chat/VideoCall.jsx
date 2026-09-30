@@ -38,7 +38,9 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
           { urls: 'stun:stun2.l.google.com:19302' },
           { urls: 'stun:stun3.l.google.com:19302' },
           { urls: 'stun:stun4.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478' }
+          { urls: 'stun:global.stun.twilio.com:3478' },
+          { urls: 'stun:stun.services.mozilla.com' },
+          { urls: 'stun:stun.cloudflare.com:3478' }
         ];
 
         if (import.meta.env.VITE_TURN_URL) {
@@ -81,13 +83,15 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
         if (isReceiving) {
           await peer.setRemoteDescription(new RTCSessionDescription(callerSignal));
           
-          // Drain any candidates that arrived while we were setting up
+          // Drain any candidates that arrived before modal mounted
           if (incomingIceCandidates && incomingIceCandidates.length > 0) {
-            incomingIceCandidates.forEach(c => pendingCandidates.current.push(c));
+            for (const c of incomingIceCandidates) {
+              try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+            }
           }
-          pendingCandidates.current.forEach(async (c) => {
-            try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) { setCallError("ICE Error 1: " + e.message); }
-          });
+          for (const c of pendingCandidates.current) {
+            try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+          }
           pendingCandidates.current = [];
 
           const answer = await peer.createAnswer();
@@ -117,21 +121,21 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
 
     initCall();
 
-    socket.on("call-accepted", async (signal) => {
+    const handleCallAccepted = async (signal) => {
       setCallAccepted(true);
       setIsConnecting(false);
       if (peerRef.current && !peerRef.current.currentRemoteDescription) {
         await peerRef.current.setRemoteDescription(new RTCSessionDescription(signal));
         
         // Drain buffered candidates received from the Callee
-        pendingCandidates.current.forEach(async (c) => {
-          try { await peerRef.current.addIceCandidate(new RTCIceCandidate(c)); } catch(e) { setCallError("ICE Error 2: " + e.message); }
-        });
+        for (const c of pendingCandidates.current) {
+          try { await peerRef.current.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+        }
         pendingCandidates.current = [];
       }
-    });
+    };
 
-    socket.on("ice-candidate", async (candidate) => {
+    const handleIceCandidate = async (candidate) => {
       if (peerRef.current) {
         if (peerRef.current.remoteDescription) {
           try {
@@ -140,20 +144,23 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
             console.error("Error adding received ice candidate", e);
           }
         } else {
-          // Remote description not set yet, buffer the candidate
           pendingCandidates.current.push(candidate);
         }
       }
-    });
+    };
 
-    socket.on("call-ended", () => {
+    const handleCallEnded = () => {
       endCall();
-    });
+    };
+
+    socket.on("call-accepted", handleCallAccepted);
+    socket.on("ice-candidate", handleIceCandidate);
+    socket.on("call-ended", handleCallEnded);
 
     return () => {
-      socket.off("call-accepted");
-      socket.off("ice-candidate");
-      socket.off("call-ended");
+      socket.off("call-accepted", handleCallAccepted);
+      socket.off("ice-candidate", handleIceCandidate);
+      socket.off("call-ended", handleCallEnded);
       endCall();
     };
   }, []);
@@ -162,7 +169,10 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
   useEffect(() => {
     if (remoteVideo.current && remoteStream) {
       remoteVideo.current.srcObject = remoteStream;
-      remoteVideo.current.play().catch(e => console.error("Autoplay prevented:", e));
+      const playPromise = remoteVideo.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => console.warn("Autoplay policy prevented auto-start:", e));
+      }
     }
   }, [remoteStream, callAccepted]);
 
