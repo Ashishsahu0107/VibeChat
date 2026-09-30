@@ -140,28 +140,26 @@ const Chat = () => {
       </div>
 
       {/* ── Mobile Bottom Nav ────────────────────────────────────────────────── */}
-      <div
-        className={`md:hidden fixed bottom-0 left-0 right-0 bg-base-100/95 backdrop-blur-md border-t border-base-300 z-50 transition-transform duration-200 ${
-          selectedChat ? 'translate-y-full pointer-events-none' : 'translate-y-0'
-        }`}
-      >
-        <div className="flex justify-around items-center px-4 py-2 pb-safe">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleTabSwitch(item.id)}
-              className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-colors ${
-                activeTab === item.id
-                  ? 'text-primary'
-                  : 'text-base-content/50'
-              }`}
-            >
-              {item.icon}
-              <span className="text-[10px] font-medium">{item.label}</span>
-            </button>
-          ))}
+      {!selectedChat && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-base-100/95 backdrop-blur-md border-t border-base-300 z-50">
+          <div className="flex justify-around items-center px-4 py-2 pb-safe">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleTabSwitch(item.id)}
+                className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-colors ${
+                  activeTab === item.id
+                    ? 'text-primary'
+                    : 'text-base-content/50'
+                }`}
+              >
+                {item.icon}
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <IncomingCallModal />
       {showSearchModal && (
