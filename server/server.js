@@ -19,6 +19,9 @@ import "./src/cron/cleanup.js";
 const port = process.env.PORT || 5000;
 const app = express();
 
+// Trust proxy for secure cookies behind Render's load balancer
+app.set("trust proxy", 1);
+
 // ── Rate Limiting ──────────────────────────────────────────────────────────
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
