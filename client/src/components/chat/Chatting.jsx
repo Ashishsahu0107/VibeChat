@@ -238,7 +238,7 @@ const MessageBubble = ({ msg, isMe, isGroup, authUser, onContextMenu, onReact, o
           className={`relative px-3 py-2 rounded-2xl shadow-sm cursor-pointer select-text
             ${isMe
               ? "bg-primary text-primary-content rounded-br-sm"
-              : "bg-base-100 text-base-content rounded-bl-sm border border-base-200"
+              : "bg-base-100 text-base-content rounded-bl-sm border border-base-300"
             }
             ${isDeleted ? "opacity-60 italic" : ""}
           `}
@@ -1161,7 +1161,7 @@ const Chatting = ({ selectedUser, onBack }) => {
           </div>
 
           {/* Text Input */}
-          <div className="flex-1 bg-base-200 rounded-full px-4 py-2 flex items-center min-h-[44px]">
+          <div className="flex-1 bg-base-200 border border-base-300 rounded-full px-4 py-2 flex items-center min-h-[44px] focus-within:border-primary transition-colors">
             <input
               ref={inputRef}
               type="text"

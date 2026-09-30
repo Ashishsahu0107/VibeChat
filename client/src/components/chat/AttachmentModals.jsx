@@ -72,7 +72,7 @@ export const PollModal = ({ isOpen, onClose, onSendPoll }) => {
               autoFocus
               required
               placeholder="Ask a question..."
-              className="input input-bordered w-full rounded-xl text-sm"
+              className="input input-bordered border border-base-300 w-full rounded-xl text-sm"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
             />
@@ -88,7 +88,7 @@ export const PollModal = ({ isOpen, onClose, onSendPoll }) => {
                   <input
                     type="text"
                     placeholder={`Option ${idx + 1}`}
-                    className="input input-bordered input-sm flex-1 rounded-xl text-sm"
+                    className="input input-bordered border border-base-300 input-sm flex-1 rounded-xl text-sm"
                     value={opt}
                     onChange={(e) => handleOptionChange(e.target.value, idx)}
                   />
@@ -218,7 +218,7 @@ export const ContactModal = ({ isOpen, onClose, onSendContact, contacts = [] }) 
             <input
               type="text"
               placeholder="Search contacts..."
-              className="input input-bordered input-sm w-full rounded-xl"
+              className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -256,7 +256,7 @@ export const ContactModal = ({ isOpen, onClose, onSendContact, contacts = [] }) 
                 type="text"
                 required
                 placeholder="Full name"
-                className="input input-bordered input-sm w-full rounded-xl"
+                className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -266,7 +266,7 @@ export const ContactModal = ({ isOpen, onClose, onSendContact, contacts = [] }) 
               <input
                 type="tel"
                 placeholder="+1 234 567 890"
-                className="input input-bordered input-sm w-full rounded-xl"
+                className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
@@ -276,7 +276,7 @@ export const ContactModal = ({ isOpen, onClose, onSendContact, contacts = [] }) 
               <input
                 type="email"
                 placeholder="name@example.com"
-                className="input input-bordered input-sm w-full rounded-xl"
+                className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -345,7 +345,7 @@ export const EventModal = ({ isOpen, onClose, onSendEvent }) => {
               type="text"
               required
               placeholder="e.g. Project Discussion"
-              className="input input-bordered input-sm w-full rounded-xl"
+              className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
@@ -357,7 +357,7 @@ export const EventModal = ({ isOpen, onClose, onSendEvent }) => {
               <input
                 type="date"
                 required
-                className="input input-bordered input-sm w-full rounded-xl"
+                className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
@@ -366,7 +366,7 @@ export const EventModal = ({ isOpen, onClose, onSendEvent }) => {
               <label className="text-xs font-semibold text-base-content/70 block mb-1">Time</label>
               <input
                 type="time"
-                className="input input-bordered input-sm w-full rounded-xl"
+                className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
               />
@@ -378,7 +378,7 @@ export const EventModal = ({ isOpen, onClose, onSendEvent }) => {
             <input
               type="text"
               placeholder="e.g. Office Room 302 or Zoom link"
-              className="input input-bordered input-sm w-full rounded-xl"
+              className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
             />
@@ -389,7 +389,7 @@ export const EventModal = ({ isOpen, onClose, onSendEvent }) => {
             <textarea
               rows={2}
               placeholder="Add details or agenda..."
-              className="textarea textarea-bordered w-full rounded-xl text-sm"
+              className="textarea textarea-bordered border border-base-300 w-full rounded-xl text-sm"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
