@@ -78,7 +78,7 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
             incomingIceCandidates.forEach(c => pendingCandidates.current.push(c));
           }
           pendingCandidates.current.forEach(async (c) => {
-            try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+            try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch(e) { setCallError("ICE Error 1: " + e.message); }
           });
           pendingCandidates.current = [];
 
@@ -117,7 +117,7 @@ const VideoCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
         
         // Drain buffered candidates received from the Callee
         pendingCandidates.current.forEach(async (c) => {
-          try { await peerRef.current.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+          try { await peerRef.current.addIceCandidate(new RTCIceCandidate(c)); } catch(e) { setCallError("ICE Error 2: " + e.message); }
         });
         pendingCandidates.current = [];
       }
