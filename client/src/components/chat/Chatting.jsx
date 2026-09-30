@@ -700,13 +700,15 @@ const Chatting = ({ selectedUser, onBack }) => {
             <>
               <button
                 onClick={() => setOutgoingCallType("video")}
-                className="p-2 hover:bg-base-200 rounded-full transition-colors text-base-content/60 hover:text-base-content hidden md:flex"
+                className="p-2 hover:bg-base-200 rounded-full transition-colors text-base-content/60 hover:text-base-content flex items-center justify-center"
+                title="Video Call"
               >
                 <FiVideo size={18} />
               </button>
               <button
                 onClick={() => setOutgoingCallType("audio")}
-                className="p-2 hover:bg-base-200 rounded-full transition-colors text-base-content/60 hover:text-base-content"
+                className="p-2 hover:bg-base-200 rounded-full transition-colors text-base-content/60 hover:text-base-content flex items-center justify-center"
+                title="Voice Call"
               >
                 <FiPhone size={18} />
               </button>

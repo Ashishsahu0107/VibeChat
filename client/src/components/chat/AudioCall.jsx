@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FiMic, FiMicOff } from 'react-icons/fi';
+import { FiMic, FiMicOff, FiPhoneOff } from 'react-icons/fi';
 import { useSocket } from '../../context/SocketContext';
 import toast from 'react-hot-toast';
 
@@ -202,26 +202,41 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
   const displayName = isReceiving ? callerName : calleeName;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-base-200/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] bg-neutral-950 flex flex-col items-center justify-between p-6 sm:p-10 select-none overflow-hidden h-[100dvh]">
       <audio ref={userAudio} autoPlay />
       
-      <div className="text-center mb-16">
+      {/* Top Header / Status pill */}
+      <div className="w-full flex justify-center pt-2 sm:pt-4">
+        <div className="bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium text-white/80 border border-white/10 shadow-lg">
+          Voice Call
+        </div>
+      </div>
+
+      {/* Center Caller Info & Avatar */}
+      <div className="flex flex-col items-center justify-center my-auto text-center px-4 w-full max-w-sm">
         {callError ? (
-          <div className="text-error bg-error/10 p-6 rounded-2xl max-w-md border border-error/20">
-            <h2 className="text-2xl font-bold mb-2">{callError}</h2>
-            <p className="text-base-content/80">
+          <div className="text-error bg-error/10 p-6 rounded-2xl w-full border border-error/20">
+            <h2 className="text-lg sm:text-xl font-bold mb-2">{callError}</h2>
+            <p className="text-sm text-base-content/80">
               Please allow microphone permissions in your browser settings to make audio calls.
             </p>
           </div>
         ) : (
           <>
-            <div className={`avatar mb-8 ${callAccepted ? 'animate-pulse' : 'animate-bounce'}`}>
-              <div className="w-40 rounded-full ring-4 ring-primary ring-offset-base-200 ring-offset-4 shadow-2xl shadow-primary/30">
-                <img src={`https://ui-avatars.com/api/?name=${displayName}&background=random`} alt="User" />
+            <div className="relative mb-6 sm:mb-8">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/30 animate-[ping_2.5s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+              <div className="avatar">
+                <div className="w-28 sm:w-36 md:w-40 rounded-full ring-4 ring-primary ring-offset-4 ring-offset-neutral-950 shadow-2xl shadow-primary/30">
+                  <img src={`https://ui-avatars.com/api/?name=${displayName}&background=random`} alt="User" />
+                </div>
               </div>
             </div>
-            <h2 className="text-4xl font-bold text-base-content mb-2">{displayName}</h2>
-            <p className="text-xl text-base-content/60">
+
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-2 truncate max-w-full">
+              {displayName}
+            </h2>
+
+            <p className="text-sm sm:text-base font-mono text-white/70">
               {callAccepted 
                 ? formatDuration(callDuration) 
                 : (isConnecting ? 'Connecting...' : 'Ringing...')}
@@ -230,13 +245,22 @@ const AudioCall = ({ authUser, callerId, callerName, callerSignal, onEndCall, is
         )}
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center gap-8 bg-base-100 px-10 py-5 rounded-full shadow-2xl border border-base-300">
-        <button onClick={toggleMute} className={`btn btn-circle btn-lg ${isMuted ? 'btn-error' : 'btn-ghost'}`}>
-          {isMuted ? <FiMicOff size={28} /> : <FiMic size={28} />}
+      {/* Bottom Controls Bar */}
+      <div className="flex items-center gap-6 sm:gap-8 bg-black/50 backdrop-blur-xl px-6 sm:px-10 py-3 sm:py-4 rounded-full shadow-2xl border border-white/15 mb-4 sm:mb-8">
+        <button 
+          onClick={toggleMute} 
+          className={`btn btn-circle w-12 h-12 sm:w-14 sm:h-14 transition-all duration-200 border-none ${isMuted ? 'bg-error text-white shadow-lg shadow-error/40 hover:bg-error/90' : 'bg-white/15 text-white hover:bg-white/25'}`}
+          title={isMuted ? "Unmute Mic" : "Mute Mic"}
+        >
+          {isMuted ? <FiMicOff className="text-xl sm:text-2xl" /> : <FiMic className="text-xl sm:text-2xl" />}
         </button>
-        <button onClick={leaveCall} className="btn btn-error btn-circle btn-lg text-white shadow-lg shadow-error/50 w-20 h-20">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"/><line x1="23" y1="1" x2="1" y2="23"/></svg>
+
+        <button 
+          onClick={leaveCall} 
+          className="btn btn-circle w-14 h-14 sm:w-16 sm:h-16 bg-error hover:bg-error/90 text-white shadow-xl shadow-error/50 hover:scale-105 active:scale-95 transition-all duration-200 border-none"
+          title="End Call"
+        >
+          <FiPhoneOff className="text-2xl sm:text-3xl" />
         </button>
       </div>
     </div>
