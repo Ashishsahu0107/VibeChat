@@ -8,6 +8,7 @@ import { BsShieldCheck } from 'react-icons/bs';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import ImageCropper from '../components/ImageCropper';
+import LogoutModal from '../components/LogoutModal';
 
 const THEMES = [
   "light", "dark", "black", "claude", "corporate", "ghibli", "gourmet",
@@ -58,6 +59,7 @@ const Settings = () => {
   );
   const fileInputRef = useRef(null);
   const [cropImageSrc, setCropImageSrc] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -122,10 +124,8 @@ const Settings = () => {
     toast.success('Setting updated');
   };
 
-  const handleLogout = async () => {
-    if (!confirm('Are you sure you want to logout?')) return;
-    await logout();
-    navigate('/login');
+  const handleLogout = () => {
+    setShowLogoutModal(true);
   };
 
   // ── Sub-screens ────────────────────────────────────────────────────────
@@ -341,6 +341,10 @@ const Settings = () => {
           onCancel={() => setCropImageSrc(null)}
         />
       )}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+      />
     </div>
   );
 };

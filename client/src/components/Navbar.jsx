@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import { FiMessageSquare, FiMenu } from "react-icons/fi";
 
 import useAuthStore from "../store/useAuthStore";
+import LogoutModal from "./LogoutModal";
 
 const Navbar = () => {
   const authUser = useAuthStore((state) => state.authUser);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState(
     localStorage.getItem("theme") || "light"
   );
@@ -64,7 +66,7 @@ const Navbar = () => {
               {authUser ? (
                 <>
                   <Link to="/settings" className="btn btn-ghost btn-sm">Settings</Link>
-                  <button onClick={useAuthStore.getState().logout} className="btn btn-error btn-sm text-white">Logout</button>
+                  <button onClick={() => setShowLogoutModal(true)} className="btn btn-error btn-sm text-white">Logout</button>
                 </>
               ) : (
                 <>
@@ -92,6 +94,10 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+      />
     </nav>
   );
 };
