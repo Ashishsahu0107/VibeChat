@@ -35,6 +35,8 @@ const statusSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+statusSchema.index({ sender: 1, expiresAt: 1 });
+
 const Status = mongoose.model("Status", statusSchema);
 
 export default Status;

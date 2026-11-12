@@ -28,6 +28,7 @@ const chatSchema = new mongoose.Schema(
 );
 
 chatSchema.index({ users: 1 });
+chatSchema.index({ users: 1, updatedAt: -1 });
 chatSchema.index({ "userStates.userId": 1 });
 
 const Chat = mongoose.model("Chat", chatSchema);

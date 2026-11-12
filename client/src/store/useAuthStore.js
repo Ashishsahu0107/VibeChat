@@ -1,8 +1,11 @@
 import { create } from "zustand";
+import api from "../config/api";
 
 const useAuthStore = create((set, get) => ({
   authUser: JSON.parse(sessionStorage.getItem("authUser")) || null,
   isCheckingAuth: false,
+  isLoggingIn: false,
+  isRegistering: false,
 
   setAuthUser: (user) => {
     if (user) {
@@ -13,9 +16,22 @@ const useAuthStore = create((set, get) => ({
     set({ authUser: user });
   },
 
+  checkAuth: async () => {
+    set({ isCheckingAuth: true });
+    try {
+      const res = await api.get("/auth/check");
+      set({ authUser: res.data, isCheckingAuth: false });
+      sessionStorage.setItem("authUser", JSON.stringify(res.data));
+      return res.data;
+    } catch (_) {
+      set({ authUser: null, isCheckingAuth: false });
+      sessionStorage.removeItem("authUser");
+      return null;
+    }
+  },
+
   logout: async () => {
     try {
-      const api = (await import("../config/api")).default;
       await api.post("/auth/logout");
     } catch (_) {}
     sessionStorage.removeItem("authUser");
@@ -24,7 +40,6 @@ const useAuthStore = create((set, get) => ({
 
   updateProfile: async (data) => {
     try {
-      const api = (await import("../config/api")).default;
       const res = await api.put("/users/profile", data);
       const updatedUser = res.data;
       sessionStorage.setItem("authUser", JSON.stringify(updatedUser));
@@ -41,7 +56,6 @@ const useAuthStore = create((set, get) => ({
 
   updateProfileImage: async (formData) => {
     try {
-      const api = (await import("../config/api")).default;
       const res = await api.post("/users/profile/image", formData);
       const updatedUser = res.data;
       sessionStorage.setItem("authUser", JSON.stringify(updatedUser));
@@ -58,7 +72,6 @@ const useAuthStore = create((set, get) => ({
 
   changePassword: async (currentPassword, newPassword) => {
     try {
-      const api = (await import("../config/api")).default;
       await api.put("/users/change-password", { currentPassword, newPassword });
       return { success: true };
     } catch (error) {
@@ -71,7 +84,6 @@ const useAuthStore = create((set, get) => ({
 
   updateSettings: async (settings) => {
     try {
-      const api = (await import("../config/api")).default;
       const res = await api.put("/users/profile", { settings });
       const updatedUser = res.data;
       sessionStorage.setItem("authUser", JSON.stringify(updatedUser));
@@ -87,7 +99,6 @@ const useAuthStore = create((set, get) => ({
 
   blockUser: async (userId) => {
     try {
-      const api = (await import("../config/api")).default;
       const res = await api.post(`/users/block/${userId}`);
       const updatedUser = res.data;
       sessionStorage.setItem("authUser", JSON.stringify(updatedUser));
@@ -103,7 +114,6 @@ const useAuthStore = create((set, get) => ({
 
   unblockUser: async (userId) => {
     try {
-      const api = (await import("../config/api")).default;
       const res = await api.post(`/users/unblock/${userId}`);
       const updatedUser = res.data;
       sessionStorage.setItem("authUser", JSON.stringify(updatedUser));

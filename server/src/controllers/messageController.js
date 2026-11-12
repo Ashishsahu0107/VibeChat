@@ -20,13 +20,13 @@ export const sendMessage = async (req, res) => {
   }
 
   try {
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId).select("_id users").lean();
     if (!chat) return res.status(404).json({ message: "Chat not found" });
     if (!chat.users.some((u) => u.toString() === req.user._id.toString())) {
       return res.status(403).json({ message: "Not a member of this chat" });
     }
 
-    let message = await Message.create({
+    const created = await Message.create({
       sender: req.user._id,
       content: content || "",
       chatId,
@@ -35,56 +35,53 @@ export const sendMessage = async (req, res) => {
       isForwarded: !!isForwarded,
     });
 
-    // Populate the newly created message
-    message = await Message.findById(message._id)
-      .populate("sender", "fullName profilePic email")
-      .populate("chatId")
-      .populate({
-        path: "replyTo",
-        populate: { path: "sender", select: "fullName profilePic" },
-      });
+    // Concurrently populate message and update chat state in parallel
+    const [populatedMessage] = await Promise.all([
+      Message.findById(created._id)
+        .populate("sender", "fullName profilePic email")
+        .populate("chatId")
+        .populate({
+          path: "replyTo",
+          populate: { path: "sender", select: "fullName profilePic" },
+        })
+        .lean(),
+      Chat.updateOne(
+        { _id: chatId },
+        {
+          $set: { latestMessage: created._id },
+          $inc: { "userStates.$[elem].unreadCount": 1 },
+        },
+        {
+          arrayFilters: [{ "elem.userId": { $ne: req.user._id } }],
+        },
+      ),
+    ]);
 
-    message = await User.populate(message, {
+    // Populate chatId.users efficiently
+    const finalMessage = await User.populate(populatedMessage, {
       path: "chatId.users",
       select: "fullName profilePic email",
     });
 
-    // Update latestMessage & increment unread for other members
-    await Chat.findByIdAndUpdate(chatId, {
-      latestMessage: message._id,
-      $inc: {},
-    });
-
-    // Increment unread for other members
-    await Chat.updateOne(
-      { _id: chatId },
-      {
-        $inc: {
-          "userStates.$[elem].unreadCount": 1,
-        },
-      },
-      {
-        arrayFilters: [{ "elem.userId": { $ne: req.user._id } }],
-      },
-    );
-
-    // Emit via socket to all room members
+    // Immediate low-latency Socket broadcast
     try {
       const io = getIo();
-      io.to(chatId.toString()).emit("message-received", message);
+      io.to(chatId.toString()).emit("message-received", finalMessage);
     } catch (_) {}
 
-    res.status(200).json(message);
+    res.status(200).json(finalMessage);
   } catch (error) {
     console.error("Error in sendMessage:", error.message);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-// ── Get Messages (paginated) ─────────────────────────────────────────────────
+// ── Get Messages (paginated & parallel query) ────────────────────────────────
 export const allMessages = async (req, res) => {
   try {
-    const chat = await Chat.findById(req.params.chatId);
+    const chat = await Chat.findById(req.params.chatId)
+      .select("users userStates")
+      .lean();
     if (!chat) return res.status(404).json({ message: "Chat not found" });
     if (!chat.users.some((u) => u.toString() === req.user._id.toString())) {
       return res.status(403).json({ message: "Not a member of this chat" });
@@ -105,16 +102,20 @@ export const allMessages = async (req, res) => {
     };
     if (clearedAt) query.createdAt = { $gt: clearedAt };
 
-    const total = await Message.countDocuments(query);
-    const messages = await Message.find(query)
-      .populate("sender", "fullName profilePic email")
-      .populate({
-        path: "replyTo",
-        populate: { path: "sender", select: "fullName profilePic" },
-      })
-      .sort({ createdAt: 1 })
-      .skip(skip)
-      .limit(limit);
+    // Parallel execution of count and message find with lean()
+    const [total, messages] = await Promise.all([
+      Message.countDocuments(query),
+      Message.find(query)
+        .populate("sender", "fullName profilePic email")
+        .populate({
+          path: "replyTo",
+          populate: { path: "sender", select: "fullName profilePic" },
+        })
+        .sort({ createdAt: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
 
     res.status(200).json({ messages, total, page, limit });
   } catch (error) {
@@ -215,10 +216,8 @@ export const reactToMessage = async (req, res) => {
 
     if (existingIdx > -1) {
       if (msg.reactions[existingIdx].emoji === emoji) {
-        // Toggle off — remove reaction
         msg.reactions.splice(existingIdx, 1);
       } else {
-        // Update emoji
         msg.reactions[existingIdx].emoji = emoji;
       }
     } else {
@@ -279,24 +278,24 @@ export const markAsRead = async (req, res) => {
   const { chatId } = req.params;
 
   try {
-    // Reset unread count for this user in this chat
-    await Chat.updateOne(
-      { _id: chatId, "userStates.userId": req.user._id },
-      { $set: { "userStates.$.unreadCount": 0 } },
-    );
-
-    // Mark all unread messages in this chat as read
-    const updated = await Message.updateMany(
-      {
-        chatId,
-        sender: { $ne: req.user._id },
-        "readBy.userId": { $ne: req.user._id },
-      },
-      {
-        $push: { readBy: { userId: req.user._id, at: new Date() } },
-        $set: { status: "read" },
-      },
-    );
+    // Reset unread count & update messages in parallel
+    const [, updated] = await Promise.all([
+      Chat.updateOne(
+        { _id: chatId, "userStates.userId": req.user._id },
+        { $set: { "userStates.$.unreadCount": 0 } },
+      ),
+      Message.updateMany(
+        {
+          chatId,
+          sender: { $ne: req.user._id },
+          "readBy.userId": { $ne: req.user._id },
+        },
+        {
+          $push: { readBy: { userId: req.user._id, at: new Date() } },
+          $set: { status: "read" },
+        },
+      ),
+    ]);
 
     try {
       const io = getIo();
@@ -313,7 +312,7 @@ export const markAsRead = async (req, res) => {
   }
 };
 
-// ── Upload Attachment ────────────────────────────────────────────────────────
+// ── Upload Attachment (Optimized Cloudinary compression) ──────────────────────
 export const uploadAttachment = async (req, res) => {
   try {
     if (!req.file) {
@@ -323,36 +322,44 @@ export const uploadAttachment = async (req, res) => {
     const mimeType = req.file.mimetype || "";
     const isImageOrVideo =
       mimeType.startsWith("image/") || mimeType.startsWith("video/");
-    if (isImageOrVideo && req.file.size > 5 * 1024 * 1024) {
+    if (isImageOrVideo && req.file.size > 15 * 1024 * 1024) {
       return res
         .status(400)
-        .json({ error: "Image and video files must not exceed 5 MB" });
+        .json({ error: "Image and video files must not exceed 15 MB" });
     }
 
     let resourceType = "auto";
     let attachmentType = "document";
+    const uploadOptions = {
+      folder: "vibechat_attachments",
+      use_filename: true,
+    };
 
     if (mimeType.startsWith("image/")) {
       resourceType = "image";
       attachmentType = "image";
+      uploadOptions.transformation = [
+        { quality: "auto:good", fetch_format: "auto" },
+      ];
     } else if (mimeType.startsWith("video/")) {
       resourceType = "video";
       attachmentType = "video";
+      uploadOptions.transformation = [
+        { quality: "auto" },
+      ];
     } else if (mimeType.startsWith("audio/")) {
-      resourceType = "video"; // Cloudinary uses "video" resource type for audio
+      resourceType = "video";
       attachmentType = "audio";
     } else {
       resourceType = "raw";
       attachmentType = "document";
     }
 
+    uploadOptions.resource_type = resourceType;
+
     const uploadPromise = new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: resourceType,
-          folder: "vibechat_attachments",
-          use_filename: true,
-        },
+        uploadOptions,
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
@@ -393,7 +400,8 @@ export const searchMessages = async (req, res) => {
     })
       .populate("sender", "fullName profilePic")
       .sort({ createdAt: -1 })
-      .limit(50);
+      .limit(50)
+      .lean();
 
     res.status(200).json(messages);
   } catch (error) {

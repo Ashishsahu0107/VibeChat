@@ -26,7 +26,8 @@ export const register = async (req, res) => {
         .json({ error: "Password must be at least 6 characters long" });
     }
 
-    const existingUser = await User.findOne({ email });
+    // Fast indexed existence check
+    const existingUser = await User.exists({ email });
 
     if (existingUser) {
       return res.status(400).json({ error: "User already exists" });
@@ -35,13 +36,13 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const profilePic = `https://ui-avatars.com/api/?name=${fullName.replace(" ", "+")}&background=random`;
+    const profilePic = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName.trim())}&background=0f172a&color=38bdf8`;
 
     const newUser = new User({
       fullName: fullName.trim(),
       email,
       password: hashedPassword,
-      phone: phone || "",
+      phone: phone ? phone.trim() : "",
       profilePic: profilePic,
     });
 
@@ -59,7 +60,7 @@ export const register = async (req, res) => {
       settings: newUser.settings,
     });
   } catch (error) {
-    console.log("Error in Register controller", error.message);
+    console.error("Error in Register controller", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -103,7 +104,7 @@ export const login = async (req, res) => {
       settings: user.settings,
     });
   } catch (error) {
-    console.log("Error in Login controller", error.message);
+    console.error("Error in Login controller", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -118,30 +119,24 @@ export const logout = (req, res) => {
     });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    console.log("Error in Logout controller", error.message);
+    console.error("Error in Logout controller", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 export const checkAuth = async (req, res) => {
   try {
-    const user = await (
-      await import("../model/user.model.js")
-    ).default
-      .findById(req.user._id)
-      .select("-password");
+    const user = await User.findById(req.user._id).select("-password").lean();
     if (!user) return res.status(401).json({ error: "User not found" });
     res.status(200).json(user);
   } catch (error) {
-    console.log("Error in CheckAuth controller", error.message);
+    console.error("Error in CheckAuth controller", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 export const GoogleUserLogin = async (req, res) => {
   try {
-    // googleMiddleware.js should attach req.user if token is valid
-    // For now, let's just create/login based on req.body
     let { email, fullName, profilePic } = req.body;
     email = typeof email === "string" ? email.trim().toLowerCase() : "";
     if (!email) {
@@ -152,10 +147,10 @@ export const GoogleUserLogin = async (req, res) => {
     if (!user) {
       user = new User({
         email,
-        fullName,
+        fullName: fullName || email.split("@")[0],
         profilePic:
           profilePic ||
-          `https://ui-avatars.com/api/?name=${fullName?.replace(" ", "+")}`,
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || "User")}&background=0f172a&color=38bdf8`,
         password: "google-auth-no-password",
       });
       await user.save();
@@ -173,7 +168,7 @@ export const GoogleUserLogin = async (req, res) => {
       settings: user.settings,
     });
   } catch (error) {
-    console.log("Error in Google Login", error.message);
+    console.error("Error in Google Login", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -207,12 +202,10 @@ export const forgotPassword = async (req, res) => {
       ],
     });
     if (!user) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "No account found with this email address. Please check your email or sign up.",
-        });
+      return res.status(400).json({
+        error:
+          "No account found with this email address. Please check your email or sign up.",
+      });
     }
 
     // Generate 6 digit numeric OTP

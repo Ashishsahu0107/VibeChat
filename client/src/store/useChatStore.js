@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import api from "../config/api";
+import useAuthStore from "./useAuthStore";
+import { compressImage } from "../utils/compressMedia";
 
 const useChatStore = create((set, get) => ({
   chats: [],
@@ -72,17 +74,25 @@ const useChatStore = create((set, get) => ({
     await get().fetchMessages(selectedChat._id, messagesPagination.page + 1);
   },
 
-  // ── Upload Attachment ──────────────────────────────────────────────────────
+  // ── Upload Attachment (with client-side image compression) ──────────────────
   uploadAttachment: async (file) => {
     try {
+      // Fast client-side image compression: converts multi-MB images to ~250-400KB WebP
+      const processedFile = await compressImage(file);
+
       const isMedia =
-        file.type?.startsWith("image/") || file.type?.startsWith("video/");
-      if (isMedia && file.size > 5 * 1024 * 1024) {
-        throw new Error("Image or video size cannot exceed 5 MB");
+        processedFile.type?.startsWith("image/") ||
+        processedFile.type?.startsWith("video/");
+      if (isMedia && processedFile.size > 15 * 1024 * 1024) {
+        throw new Error("Media size cannot exceed 15 MB");
       }
+
       const formData = new FormData();
-      formData.append("file", file);
-      const res = await api.post("/messages/upload/file", formData);
+      formData.append("file", processedFile);
+
+      const res = await api.post("/messages/upload/file", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       return res.data;
     } catch (error) {
       console.error("Upload error:", error);
@@ -90,7 +100,7 @@ const useChatStore = create((set, get) => ({
     }
   },
 
-  // ── Send Message ───────────────────────────────────────────────────────────
+  // ── Send Message with Instant Optimistic UI Update ─────────────────────────
   sendMessage: async (
     content,
     chatId,
@@ -98,6 +108,46 @@ const useChatStore = create((set, get) => ({
     replyTo = null,
     isForwarded = false,
   ) => {
+    const authUser = useAuthStore.getState().authUser;
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+    // Instant optimistic message representation
+    const optimisticMessage = {
+      _id: tempId,
+      tempId,
+      chatId,
+      sender: {
+        _id: authUser?._id,
+        fullName: authUser?.fullName || "Me",
+        profilePic: authUser?.profilePic || "",
+        email: authUser?.email || "",
+      },
+      content: content || "",
+      attachments: attachments || [],
+      replyTo: replyTo || null,
+      isForwarded: !!isForwarded,
+      status: "sending",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      reactions: [],
+      starredBy: [],
+      deliveredTo: [],
+      readBy: [],
+    };
+
+    // 1. Instantly append to state
+    set((state) => ({
+      messages: [...state.messages, optimisticMessage],
+      chats: state.chats
+        .map((c) =>
+          c._id === chatId
+            ? { ...c, latestMessage: optimisticMessage, updatedAt: new Date() }
+            : c,
+        )
+        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)),
+    }));
+
+    // 2. Dispatch to server in background
     try {
       const res = await api.post("/messages", {
         content,
@@ -106,30 +156,63 @@ const useChatStore = create((set, get) => ({
         replyTo: replyTo?._id || null,
         isForwarded,
       });
-      get().addMessage(res.data);
-      // Update chat's latestMessage
+
+      const confirmedMessage = res.data;
+
+      // 3. Replace optimistic message with confirmed server message
       set((state) => ({
-        chats: state.chats
-          .map((c) =>
-            c._id === chatId
-              ? { ...c, latestMessage: res.data, updatedAt: new Date() }
-              : c,
-          )
-          .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)),
+        messages: state.messages.map((m) =>
+          m._id === tempId || m.tempId === tempId ? confirmedMessage : m,
+        ),
+        chats: state.chats.map((c) =>
+          c._id === chatId ? { ...c, latestMessage: confirmedMessage } : c,
+        ),
       }));
-      return res.data;
+
+      return confirmedMessage;
     } catch (error) {
       console.error("Send message error:", error);
+      // Mark optimistic message as failed
+      set((state) => ({
+        messages: state.messages.map((m) =>
+          m._id === tempId ? { ...m, status: "failed" } : m,
+        ),
+      }));
       throw error;
     }
+  },
+
+  // ── Retry Failed Message ───────────────────────────────────────────────────
+  retryMessage: async (failedMessage) => {
+    if (!failedMessage) return;
+    set((state) => ({
+      messages: state.messages.filter((m) => m._id !== failedMessage._id),
+    }));
+    return get().sendMessage(
+      failedMessage.content,
+      failedMessage.chatId,
+      failedMessage.attachments,
+      failedMessage.replyTo,
+      failedMessage.isForwarded,
+    );
   },
 
   // ── Add Message (from socket) ──────────────────────────────────────────────
   addMessage: (message) => {
     set((state) => {
-      // Avoid duplicates
+      // Avoid duplicates or replace if same client message
       if (state.messages.some((m) => m._id === message._id)) return {};
-      return { messages: [...state.messages, message] };
+      // If we have an optimistic message with same tempId or matching text & timestamp
+      const withoutTemp = state.messages.filter(
+        (m) =>
+          !(
+            m.status === "sending" &&
+            m.sender?._id === message.sender?._id &&
+            m.content === message.content &&
+            Math.abs(new Date(m.createdAt) - new Date(message.createdAt)) < 5000
+          ),
+      );
+      return { messages: [...withoutTemp, message] };
     });
   },
 
@@ -456,7 +539,7 @@ const useChatStore = create((set, get) => ({
     set((state) => ({
       chats: state.chats.map((c) => {
         if (c._id !== chatId) return c;
-        return c; // Server handles unread
+        return c;
       }),
     }));
   },

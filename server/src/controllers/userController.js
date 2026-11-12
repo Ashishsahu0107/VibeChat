@@ -18,9 +18,9 @@ export const getUsersForSidebar = async (req, res) => {
         }
       : {};
 
-    const currentUser = await User.findById(req.user._id).select(
-      "blockedUsers",
-    );
+    const currentUser = await User.findById(req.user._id)
+      .select("blockedUsers")
+      .lean();
     const blockedIds = currentUser?.blockedUsers || [];
 
     const users = await User.find(keyword)
@@ -28,7 +28,8 @@ export const getUsersForSidebar = async (req, res) => {
         _id: { $ne: req.user._id, $nin: blockedIds },
       })
       .select("-password")
-      .limit(50);
+      .limit(50)
+      .lean();
 
     res.status(200).json(users);
   } catch (error) {
@@ -62,7 +63,9 @@ export const updateProfile = async (req, res) => {
       req.user._id,
       { $set: updateFields },
       { new: true },
-    ).select("-password");
+    )
+      .select("-password")
+      .lean();
 
     res.status(200).json(updatedUser);
   } catch (error) {
@@ -108,8 +111,8 @@ export const uploadProfileImage = async (req, res) => {
       return res.status(400).json({ error: "No image file provided" });
     }
 
-    if (req.file.size > 5 * 1024 * 1024) {
-      return res.status(400).json({ error: "Image size must not exceed 5 MB" });
+    if (req.file.size > 10 * 1024 * 1024) {
+      return res.status(400).json({ error: "Image size must not exceed 10 MB" });
     }
 
     const b64 = Buffer.from(req.file.buffer).toString("base64");
@@ -118,7 +121,7 @@ export const uploadProfileImage = async (req, res) => {
     const uploadResponse = await cloudinary.uploader.upload(dataURI, {
       folder: "vibechat_profiles",
       transformation: [
-        { width: 400, height: 400, crop: "fill", gravity: "face" },
+        { width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto", fetch_format: "auto" },
       ],
     });
 
@@ -126,7 +129,9 @@ export const uploadProfileImage = async (req, res) => {
       req.user._id,
       { profilePic: uploadResponse.secure_url },
       { new: true },
-    ).select("-password");
+    )
+      .select("-password")
+      .lean();
 
     res.status(200).json(updatedUser);
   } catch (error) {
@@ -147,7 +152,9 @@ export const blockUser = async (req, res) => {
       req.user._id,
       { $addToSet: { blockedUsers: userId } },
       { new: true },
-    ).select("-password");
+    )
+      .select("-password")
+      .lean();
 
     res.status(200).json(user);
   } catch (error) {
@@ -165,7 +172,9 @@ export const unblockUser = async (req, res) => {
       req.user._id,
       { $pull: { blockedUsers: userId } },
       { new: true },
-    ).select("-password");
+    )
+      .select("-password")
+      .lean();
 
     res.status(200).json(user);
   } catch (error) {
@@ -184,20 +193,19 @@ export const globalSearch = async (req, res) => {
 
     const regex = { $regex: q, $options: "i" };
 
-    // Search users
-    const users = await User.find({
-      _id: { $ne: req.user._id },
-      $or: [{ fullName: regex }, { email: regex }],
-    })
-      .select("-password")
-      .limit(10);
+    // Run user search and chat ID lookup in parallel
+    const [users, userChatIds] = await Promise.all([
+      User.find({
+        _id: { $ne: req.user._id },
+        $or: [{ fullName: regex }, { email: regex }],
+      })
+        .select("-password")
+        .limit(10)
+        .lean(),
+      Chat.find({ users: req.user._id }).distinct("_id"),
+    ]);
 
-    // Get user's chats for context
-    const userChatIds = await Chat.find({ users: req.user._id }).distinct(
-      "_id",
-    );
-
-    // Search messages in user's chats
+    // Search messages within user's chats
     const messages = await Message.find({
       chatId: { $in: userChatIds },
       content: regex,
@@ -207,7 +215,8 @@ export const globalSearch = async (req, res) => {
       .populate("sender", "fullName profilePic")
       .populate("chatId", "isGroupChat groupName users")
       .sort({ createdAt: -1 })
-      .limit(20);
+      .limit(20)
+      .lean();
 
     res.status(200).json({ users, messages });
   } catch (error) {
@@ -219,9 +228,9 @@ export const globalSearch = async (req, res) => {
 // ── Get User Profile by ID ─────────────────────────────────────────────────────
 export const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId).select(
-      "-password -blockedUsers",
-    );
+    const user = await User.findById(req.params.userId)
+      .select("-password -blockedUsers")
+      .lean();
     if (!user) return res.status(404).json({ error: "User not found" });
     res.status(200).json(user);
   } catch (error) {

@@ -30,5 +30,8 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+userSchema.index({ fullName: "text", email: "text" });
+userSchema.index({ isOnline: 1 });
+
 const User = mongoose.model("User", userSchema);
 export default User;

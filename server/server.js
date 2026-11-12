@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 import rateLimit from "express-rate-limit";
 import connectDB from "./src/config/db.js";
 import authRouter from "./src/routes/authRouter.js";
@@ -25,25 +26,30 @@ app.set("trust proxy", 1);
 // ── Rate Limiting ──────────────────────────────────────────────────────────
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
-  max: 500,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many requests, please try again later." },
 });
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: "Too many auth attempts, please try again later." },
-});
-
 app.use(generalLimiter);
 
-// ── Middleware ─────────────────────────────────────────────────────────────
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+// ── Performance Middleware ──────────────────────────────────────────────────
+// Gzip/Brotli response compression for APIs & static assets
+app.use(
+  compression({
+    level: 6,
+    threshold: 1024, // Compress responses above 1 KB
+    filter: (req, res) => {
+      if (req.headers["x-no-compression"]) return false;
+      return compression.filter(req, res);
+    },
+  })
+);
+
+// ── Standard Middleware ─────────────────────────────────────────────────────
+app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 app.use(cookieParser());
 app.use(
   cors({
@@ -63,7 +69,7 @@ app.use((req, res, next) => {
 });
 
 // ── Routes ─────────────────────────────────────────────────────────────────
-app.use("/api/auth", authLimiter, authRouter);
+app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/messages", messageRouter);
 app.use("/api/chats", chatRouter);
@@ -77,7 +83,12 @@ app.get("/", (req, res) => {
 // ── Production Setup ───────────────────────────────────────────────────────
 const __dirname = path.resolve();
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/dist")));
+  app.use(
+    express.static(path.join(__dirname, "../client/dist"), {
+      maxAge: "1y", // Aggressive caching for hashed assets
+      etag: true,
+    })
+  );
   // Catch-all route for frontend
   app.use((req, res, next) => {
     if (req.originalUrl.startsWith("/api")) {
@@ -100,6 +111,9 @@ app.use((err, req, res, next) => {
 
 // ── Start ──────────────────────────────────────────────────────────────────
 const server = http.createServer(app);
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
+
 initSocket(server);
 
 server.listen(port, () => {

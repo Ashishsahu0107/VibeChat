@@ -8,7 +8,7 @@ import { getIo } from "../socket/socket.js";
 export const fetchChats = async (req, res) => {
   try {
     const chats = await Chat.find({
-      users: { $elemMatch: { $eq: req.user._id } },
+      users: req.user._id,
     })
       .populate("users", "-password")
       .populate("groupAdmins", "-password")
@@ -16,7 +16,8 @@ export const fetchChats = async (req, res) => {
         path: "latestMessage",
         populate: { path: "sender", select: "fullName profilePic email" },
       })
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .lean();
 
     res.status(200).json(chats);
   } catch (error) {
@@ -33,16 +34,14 @@ export const accessChat = async (req, res) => {
   try {
     let chats = await Chat.find({
       isGroupChat: false,
-      $and: [
-        { users: { $elemMatch: { $eq: req.user._id } } },
-        { users: { $elemMatch: { $eq: userId } } },
-      ],
+      users: { $all: [req.user._id, userId] },
     })
       .populate("users", "-password")
       .populate({
         path: "latestMessage",
         populate: { path: "sender", select: "fullName profilePic email" },
-      });
+      })
+      .lean();
 
     if (chats.length > 0) {
       return res.status(200).json(chats[0]);
@@ -55,10 +54,9 @@ export const accessChat = async (req, res) => {
     };
 
     const created = await Chat.create(chatData);
-    const fullChat = await Chat.findById(created._id).populate(
-      "users",
-      "-password",
-    );
+    const fullChat = await Chat.findById(created._id)
+      .populate("users", "-password")
+      .lean();
     res.status(200).json(fullChat);
   } catch (error) {
     console.error("Error in accessChat:", error.message);
@@ -99,7 +97,8 @@ export const createGroupChat = async (req, res) => {
 
     const fullGroupChat = await Chat.findById(groupChat._id)
       .populate("users", "-password")
-      .populate("groupAdmins", "-password");
+      .populate("groupAdmins", "-password")
+      .lean();
 
     // Notify all members via socket
     try {
@@ -122,7 +121,7 @@ export const createGroupChat = async (req, res) => {
 export const renameGroup = async (req, res) => {
   const { chatId, chatName, description } = req.body;
   try {
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId).select("groupAdmins").lean();
     if (!chat) return res.status(404).json({ message: "Chat Not Found" });
 
     const isAdmin = chat.groupAdmins.some(
@@ -141,7 +140,8 @@ export const renameGroup = async (req, res) => {
       new: true,
     })
       .populate("users", "-password")
-      .populate("groupAdmins", "-password");
+      .populate("groupAdmins", "-password")
+      .lean();
 
     try {
       const io = getIo();
@@ -167,7 +167,7 @@ export const updateGroupAvatar = async (req, res) => {
         .json({ message: "Image size must not exceed 5 MB" });
     }
 
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId).select("groupAdmins").lean();
     if (!chat) return res.status(404).json({ message: "Chat Not Found" });
 
     const isAdmin = chat.groupAdmins.some(
@@ -182,7 +182,9 @@ export const updateGroupAvatar = async (req, res) => {
     const dataURI = `data:${req.file.mimetype};base64,${b64}`;
     const result = await cloudinary.uploader.upload(dataURI, {
       folder: "vibechat_groups",
-      transformation: [{ width: 400, height: 400, crop: "fill" }],
+      transformation: [
+        { width: 400, height: 400, crop: "fill", quality: "auto", fetch_format: "auto" },
+      ],
     });
 
     const updatedChat = await Chat.findByIdAndUpdate(
@@ -191,7 +193,8 @@ export const updateGroupAvatar = async (req, res) => {
       { new: true },
     )
       .populate("users", "-password")
-      .populate("groupAdmins", "-password");
+      .populate("groupAdmins", "-password")
+      .lean();
 
     try {
       const io = getIo();
@@ -209,7 +212,7 @@ export const updateGroupAvatar = async (req, res) => {
 export const addToGroup = async (req, res) => {
   const { chatId, userId } = req.body;
   try {
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId).select("groupAdmins").lean();
     if (!chat) return res.status(404).json({ message: "Chat Not Found" });
 
     const isAdmin = chat.groupAdmins.some(
@@ -224,7 +227,8 @@ export const addToGroup = async (req, res) => {
       { new: true },
     )
       .populate("users", "-password")
-      .populate("groupAdmins", "-password");
+      .populate("groupAdmins", "-password")
+      .lean();
 
     try {
       const io = getIo();
@@ -243,7 +247,7 @@ export const addToGroup = async (req, res) => {
 export const removeFromGroup = async (req, res) => {
   const { chatId, userId } = req.body;
   try {
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId).select("groupAdmins").lean();
     if (!chat) return res.status(404).json({ message: "Chat Not Found" });
 
     const isAdmin = chat.groupAdmins.some(
@@ -263,7 +267,8 @@ export const removeFromGroup = async (req, res) => {
       { new: true },
     )
       .populate("users", "-password")
-      .populate("groupAdmins", "-password");
+      .populate("groupAdmins", "-password")
+      .lean();
 
     try {
       const io = getIo();
@@ -282,7 +287,7 @@ export const removeFromGroup = async (req, res) => {
 export const makeAdmin = async (req, res) => {
   const { chatId, userId } = req.body;
   try {
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId).select("groupAdmins").lean();
     if (!chat) return res.status(404).json({ message: "Chat Not Found" });
 
     const isAdmin = chat.groupAdmins.some(
@@ -297,7 +302,8 @@ export const makeAdmin = async (req, res) => {
       { new: true },
     )
       .populate("users", "-password")
-      .populate("groupAdmins", "-password");
+      .populate("groupAdmins", "-password")
+      .lean();
 
     try {
       const io = getIo();

@@ -17,7 +17,9 @@ export const createStatus = async (req, res) => {
       type,
       content,
       createdAt: { $gt: new Date(Date.now() - 10000) },
-    }).populate("sender", "fullName profilePic");
+    })
+      .populate("sender", "fullName profilePic")
+      .lean();
 
     if (recentDuplicate) {
       return res.status(200).json(recentDuplicate);
@@ -50,13 +52,16 @@ export const createStatus = async (req, res) => {
 // ── Get Statuses ──────────────────────────────────────────────────────────────
 export const getStatuses = async (req, res) => {
   try {
-    // 1. Get all users the current user has a chat with (Contacts)
-    const chats = await Chat.find({ users: req.user._id });
+    // 1. Get contact IDs with projection and lean()
+    const chats = await Chat.find({ users: req.user._id })
+      .select("users")
+      .lean();
     const contactIds = new Set();
     chats.forEach((chat) => {
       chat.users.forEach((u) => {
-        if (u.toString() !== req.user._id.toString()) {
-          contactIds.add(u.toString());
+        const uid = u.toString();
+        if (uid !== req.user._id.toString()) {
+          contactIds.add(uid);
         }
       });
     });
@@ -68,7 +73,8 @@ export const getStatuses = async (req, res) => {
     })
       .populate("sender", "fullName profilePic")
       .populate("viewers.user", "fullName profilePic")
-      .sort({ createdAt: 1 }); // Oldest first so stories play in order
+      .sort({ createdAt: 1 })
+      .lean();
 
     res.status(200).json(activeStatuses);
   } catch (error) {

@@ -221,13 +221,9 @@ export const SocketProvider = ({ children }) => {
         // Toast
         toast(`💬 ${senderName}: ${msgPreview}`, { duration: 3000 });
       } else {
-        // Currently in this chat
+        // Currently in this chat: add message and mark as read directly without full chat refetch
         addMessage(newMessage);
-
-        // Wait for fetchChats to finish before resetting the unread count locally and on backend
-        fetchChats().then(() => {
-          markAsRead(newMessage.chatId?._id || newMessage.chatId);
-        });
+        markAsRead(newMessage.chatId?._id || newMessage.chatId);
 
         if (
           newMessage.sender?._id !== currentUser._id &&

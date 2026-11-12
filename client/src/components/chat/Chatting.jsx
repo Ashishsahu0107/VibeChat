@@ -217,11 +217,29 @@ const MenuItem = ({ icon, label, onClick, className = "" }) => (
 const ReadTicks = ({ msg, authUserId }) => {
   if (msg.sender?._id !== authUserId) return null;
   if (msg.isDeleted) return null;
+  if (msg.status === "sending") {
+    return (
+      <span
+        className="w-2.5 h-2.5 border border-white/50 border-t-transparent rounded-full animate-spin shrink-0 inline-block"
+        title="Sending..."
+      />
+    );
+  }
+  if (msg.status === "failed") {
+    return (
+      <span
+        className="text-[10px] text-rose-400 font-bold shrink-0 cursor-pointer"
+        title="Sending failed. Click to retry."
+      >
+        ⚠️
+      </span>
+    );
+  }
   if (msg.readBy?.length > 0)
-    return <BsCheckAll size={14} className="text-blue-400 shrink-0" />;
+    return <BsCheckAll size={14} className="text-cyan-400 shrink-0" />;
   if (msg.deliveredTo?.length > 0)
-    return <BsCheckAll size={14} className="text-base-content/40 shrink-0" />;
-  return <BsCheck size={14} className="text-base-content/40 shrink-0" />;
+    return <BsCheckAll size={14} className="text-white/50 shrink-0" />;
+  return <BsCheck size={14} className="text-white/50 shrink-0" />;
 };
 
 // ── Attachment Renderer ─────────────────────────────────────────────────────────
@@ -801,6 +819,17 @@ const Chatting = ({ selectedUser, onBack }) => {
     socket?.emit("stop-typing", { chatId, userId: authUser._id });
     setTyping(false);
 
+    const textToSend = content;
+    const currentReplyTo = replyTo;
+
+    // Fast path: for text-only messages, immediately clear input and play sound
+    if (!selectedFile && !recordedAudio) {
+      setContent("");
+      setReplyTo(null);
+      playNotificationSound("send");
+      scrollToBottom();
+    }
+
     try {
       setIsUploading(true);
       let attachments = [];
@@ -814,17 +843,19 @@ const Chatting = ({ selectedUser, onBack }) => {
         attachments.push(att);
       }
 
-      await sendMessage(content, chatId, attachments, replyTo);
-      playNotificationSound("send");
+      await sendMessage(textToSend, chatId, attachments, currentReplyTo);
 
-      setContent("");
-      setRecordedAudio(null);
-      setSelectedFile(null);
-      setFilePreview(null);
-      setReplyTo(null);
-      clearFileInputs();
+      if (selectedFile || recordedAudio) {
+        playNotificationSound("send");
+        setContent("");
+        setRecordedAudio(null);
+        setSelectedFile(null);
+        setFilePreview(null);
+        setReplyTo(null);
+        clearFileInputs();
+        scrollToBottom();
+      }
       inputRef.current?.focus();
-      scrollToBottom();
     } catch (err) {
       toast.error(
         err.response?.data?.error || err.message || "Failed to send message",

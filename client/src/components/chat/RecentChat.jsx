@@ -16,19 +16,28 @@ const NewChatModal = ({ onClose, onSelectChat }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const { accessChat } = useChatStore();
+  const debounceRef = useRef(null);
 
-  const handleSearch = async (q) => {
+  const handleSearch = (q) => {
     setSearch(q);
-    if (!q.trim()) return setUsers([]);
-    setLoading(true);
-    try {
-      const res = await api.get(`/users?search=${q}`);
-      setUsers(res.data || []);
-    } catch {
+    if (!q.trim()) {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
       setUsers([]);
-    } finally {
       setLoading(false);
+      return;
     }
+    setLoading(true);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await api.get(`/users?search=${encodeURIComponent(q.trim())}`);
+        setUsers(res.data || []);
+      } catch {
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 250);
   };
 
   const handleStartChat = async (userId) => {
@@ -110,18 +119,22 @@ const NewGroupModal = ({ onClose, onSelectChat }) => {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const { createGroup } = useChatStore();
+  const debounceRef = useRef(null);
 
-  const handleSearch = async (q) => {
+  const handleSearch = (q) => {
     setSearch(q);
     setLoading(true);
-    try {
-      const res = await api.get(`/users?search=${q}`);
-      setAllUsers(res.data || []);
-    } catch {
-      setAllUsers([]);
-    } finally {
-      setLoading(false);
-    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await api.get(`/users?search=${encodeURIComponent(q.trim())}`);
+        setAllUsers(res.data || []);
+      } catch {
+        setAllUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 250);
   };
 
   useEffect(() => {

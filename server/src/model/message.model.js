@@ -68,6 +68,7 @@ const messageSchema = new mongoose.Schema(
 );
 
 messageSchema.index({ chatId: 1, createdAt: -1 });
+messageSchema.index({ chatId: 1, createdAt: 1 });
 messageSchema.index({ sender: 1 });
 messageSchema.index({ chatId: 1, content: "text" }); // For text search
 
