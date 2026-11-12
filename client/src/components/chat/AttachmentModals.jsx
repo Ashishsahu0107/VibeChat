@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { FiX, FiPlus, FiTrash2, FiCalendar, FiClock, FiMapPin, FiUser, FiPhone, FiMail } from "react-icons/fi";
+import {
+  FiX,
+  FiPlus,
+  FiTrash2,
+  FiCalendar,
+  FiClock,
+  FiMapPin,
+  FiUser,
+  FiPhone,
+  FiMail,
+} from "react-icons/fi";
 import { IoBarChart, IoCalendar, IoPerson } from "react-icons/io5";
 
 // ── Poll Modal ──────────────────────────────────────────────────────────────
@@ -36,7 +46,8 @@ export const PollModal = ({ isOpen, onClose, onSendPoll }) => {
 
     let pollText = `📊 *Poll: ${question.trim()}*\n`;
     validOptions.forEach((opt, idx) => {
-      const numEmoji = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"][idx] || "▫️";
+      const numEmoji =
+        ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"][idx] || "▫️";
       pollText += `\n${numEmoji} ${opt}`;
     });
     if (allowMultiple) {
@@ -50,21 +61,29 @@ export const PollModal = ({ isOpen, onClose, onSendPoll }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-base-100 rounded-2xl shadow-2xl max-w-md w-full border border-base-300 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-base-300">
+    <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="glass-card max-w-md w-full border border-white/20 overflow-hidden shadow-2xl shadow-blue-950/50 animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#0a0f1d]/80">
           <div className="flex items-center gap-2.5">
-            <IoBarChart className="text-[#eab308] text-xl" />
-            <h3 className="font-bold text-lg">Create a Poll</h3>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <IoBarChart size={18} />
+            </div>
+            <h3 className="font-bold text-base text-white">Create a Poll</h3>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-base-200 rounded-full transition-colors">
-            <FiX size={20} />
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-white/[0.08] rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <FiX size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="p-5 space-y-4 max-h-[75vh] overflow-y-auto"
+        >
           <div>
-            <label className="text-xs font-semibold text-base-content/70 uppercase tracking-wider block mb-1.5">
+            <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block mb-1.5">
               Question
             </label>
             <input
@@ -72,14 +91,14 @@ export const PollModal = ({ isOpen, onClose, onSendPoll }) => {
               autoFocus
               required
               placeholder="Ask a question..."
-              className="input input-bordered border border-base-300 w-full rounded-xl text-sm"
+              className="glass-input text-xs w-full px-3.5 py-2.5"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-base-content/70 uppercase tracking-wider block mb-1.5">
+            <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block mb-1.5">
               Options
             </label>
             <div className="space-y-2">
@@ -88,7 +107,7 @@ export const PollModal = ({ isOpen, onClose, onSendPoll }) => {
                   <input
                     type="text"
                     placeholder={`Option ${idx + 1}`}
-                    className="input input-bordered border border-base-300 input-sm flex-1 rounded-xl text-sm"
+                    className="glass-input text-xs flex-1 px-3 py-2"
                     value={opt}
                     onChange={(e) => handleOptionChange(e.target.value, idx)}
                   />
@@ -96,9 +115,9 @@ export const PollModal = ({ isOpen, onClose, onSendPoll }) => {
                     <button
                       type="button"
                       onClick={() => handleRemoveOption(idx)}
-                      className="p-1.5 text-error hover:bg-error/10 rounded-lg transition-colors"
+                      className="p-2 text-rose-400 hover:bg-rose-500/15 rounded-xl transition-colors cursor-pointer"
                     >
-                      <FiTrash2 size={16} />
+                      <FiTrash2 size={15} />
                     </button>
                   )}
                 </div>
@@ -109,31 +128,37 @@ export const PollModal = ({ isOpen, onClose, onSendPoll }) => {
               <button
                 type="button"
                 onClick={handleAddOption}
-                className="mt-2 text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                className="mt-2.5 text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 cursor-pointer"
               >
                 <FiPlus size={14} /> Add option
               </button>
             )}
           </div>
 
-          <label className="flex items-center gap-3 cursor-pointer py-1">
+          <label className="flex items-center gap-3 cursor-pointer py-1 select-none">
             <input
               type="checkbox"
               checked={allowMultiple}
               onChange={(e) => setAllowMultiple(e.target.checked)}
-              className="checkbox checkbox-primary checkbox-sm"
+              className="accent-cyan-400 w-4 h-4 cursor-pointer"
             />
-            <span className="text-sm">Allow multiple answers</span>
+            <span className="text-xs text-slate-300 font-medium">Allow participants to select multiple answers</span>
           </label>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-base-300">
-            <button type="button" onClick={onClose} className="btn btn-ghost btn-sm rounded-xl">
+          <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-glass px-4 py-2 text-xs font-medium"
+            >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={!question.trim() || options.filter((o) => o.trim()).length < 2}
-              className="btn btn-primary btn-sm rounded-xl"
+              disabled={
+                !question.trim() || options.filter((o) => o.trim()).length < 2
+              }
+              className="btn-glow px-5 py-2 text-xs font-semibold"
             >
               Send Poll
             </button>
@@ -145,7 +170,12 @@ export const PollModal = ({ isOpen, onClose, onSendPoll }) => {
 };
 
 // ── Contact Modal ───────────────────────────────────────────────────────────
-export const ContactModal = ({ isOpen, onClose, onSendContact, contacts = [] }) => {
+export const ContactModal = ({
+  isOpen,
+  onClose,
+  onSendContact,
+  contacts = [],
+}) => {
   const [tab, setTab] = useState("select"); // "select" or "manual"
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -182,34 +212,43 @@ export const ContactModal = ({ isOpen, onClose, onSendContact, contacts = [] }) 
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-base-100 rounded-2xl shadow-2xl max-w-md w-full border border-base-300 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-base-300">
+    <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="glass-card max-w-md w-full border border-white/20 overflow-hidden shadow-2xl shadow-blue-950/50 animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#0a0f1d]/80">
           <div className="flex items-center gap-2.5">
-            <IoPerson className="text-[#06b6d4] text-xl" />
-            <h3 className="font-bold text-lg">Share Contact</h3>
+            <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              <IoPerson size={18} />
+            </div>
+            <h3 className="font-bold text-base text-white">Share Contact</h3>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-base-200 rounded-full transition-colors">
-            <FiX size={20} />
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-white/[0.08] rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <FiX size={18} />
           </button>
         </div>
 
-        <div className="flex border-b border-base-300 px-5 pt-2">
+        <div className="flex border-b border-white/10 px-5 pt-2">
           <button
             onClick={() => setTab("select")}
-            className={`pb-2 px-3 text-sm font-semibold border-b-2 transition-colors ${
-              tab === "select" ? "border-primary text-primary" : "border-transparent text-base-content/60"
+            className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
+              tab === "select"
+                ? "border-cyan-400 text-cyan-300"
+                : "border-transparent text-slate-400 hover:text-white"
             }`}
           >
-            From Chats
+            From Contacts
           </button>
           <button
             onClick={() => setTab("manual")}
-            className={`pb-2 px-3 text-sm font-semibold border-b-2 transition-colors ${
-              tab === "manual" ? "border-primary text-primary" : "border-transparent text-base-content/60"
+            className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
+              tab === "manual"
+                ? "border-cyan-400 text-cyan-300"
+                : "border-transparent text-slate-400 hover:text-white"
             }`}
           >
-            Custom Contact
+            Custom Entry
           </button>
         </div>
 
@@ -218,7 +257,7 @@ export const ContactModal = ({ isOpen, onClose, onSendContact, contacts = [] }) 
             <input
               type="text"
               placeholder="Search contacts..."
-              className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
+              className="glass-input text-xs w-full px-3.5 py-2"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -228,65 +267,91 @@ export const ContactModal = ({ isOpen, onClose, onSendContact, contacts = [] }) 
                   <div
                     key={c._id}
                     onClick={() => handleSelectContact(c)}
-                    className="flex items-center gap-3 p-2 hover:bg-base-200 rounded-xl cursor-pointer transition-colors"
+                    className="flex items-center gap-3 p-2.5 hover:bg-white/[0.06] rounded-xl cursor-pointer transition-colors border border-transparent hover:border-white/[0.06]"
                   >
-                    <div className="w-9 h-9 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center font-bold text-primary shrink-0">
+                    <div className="w-9 h-9 rounded-xl overflow-hidden bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center font-bold text-cyan-300 shrink-0 text-sm">
                       {c.profilePic ? (
-                        <img src={c.profilePic} alt="" className="w-full h-full object-cover" />
+                        <img
+                          src={c.profilePic}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         (c.fullName || c.groupName || "U")[0]?.toUpperCase()
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">{c.fullName || c.groupName}</div>
-                      {c.email && <div className="text-xs text-base-content/50 truncate">{c.email}</div>}
+                      <div className="font-semibold text-xs text-white truncate">
+                        {c.fullName || c.groupName}
+                      </div>
+                      {c.email && (
+                        <div className="text-[11px] text-slate-400 truncate">
+                          {c.email}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-6 text-xs text-base-content/50">No contacts found</div>
+                <div className="text-center py-6 text-xs text-slate-400">
+                  No contacts found
+                </div>
               )}
             </div>
           </div>
         ) : (
           <form onSubmit={handleManualSubmit} className="p-5 space-y-3.5">
             <div>
-              <label className="text-xs font-semibold text-base-content/70 block mb-1">Name</label>
+              <label className="text-xs font-semibold text-slate-200 block mb-1">
+                Full Name
+              </label>
               <input
                 type="text"
                 required
                 placeholder="Full name"
-                className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
+                className="glass-input text-xs w-full px-3.5 py-2"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-base-content/70 block mb-1">Phone Number</label>
+              <label className="text-xs font-semibold text-slate-200 block mb-1">
+                Phone Number
+              </label>
               <input
                 type="tel"
                 placeholder="+1 234 567 890"
-                className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
+                className="glass-input text-xs w-full px-3.5 py-2"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-base-content/70 block mb-1">Email (Optional)</label>
+              <label className="text-xs font-semibold text-slate-200 block mb-1">
+                Email (Optional)
+              </label>
               <input
                 type="email"
                 placeholder="name@example.com"
-                className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
+                className="glass-input text-xs w-full px-3.5 py-2"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-base-300">
-              <button type="button" onClick={onClose} className="btn btn-ghost btn-sm rounded-xl">
+            <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-glass px-4 py-2 text-xs font-medium"
+              >
                 Cancel
               </button>
-              <button type="submit" disabled={!name.trim()} className="btn btn-primary btn-sm rounded-xl">
+              <button
+                type="submit"
+                disabled={!name.trim()}
+                className="btn-glow px-5 py-2 text-xs font-semibold"
+              >
                 Share Contact
               </button>
             </div>
@@ -326,26 +391,36 @@ export const EventModal = ({ isOpen, onClose, onSendEvent }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-base-100 rounded-2xl shadow-2xl max-w-md w-full border border-base-300 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-base-300">
+    <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="glass-card max-w-md w-full border border-white/20 overflow-hidden shadow-2xl shadow-purple-950/50 animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#0a0f1d]/80">
           <div className="flex items-center gap-2.5">
-            <IoCalendar className="text-[#f43f5e] text-xl" />
-            <h3 className="font-bold text-lg">Create an Event</h3>
+            <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+              <IoCalendar size={18} />
+            </div>
+            <h3 className="font-bold text-base text-white">Create an Event</h3>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-base-200 rounded-full transition-colors">
-            <FiX size={20} />
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-white/[0.08] rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <FiX size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-3.5 max-h-[75vh] overflow-y-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="p-5 space-y-3.5 max-h-[75vh] overflow-y-auto"
+        >
           <div>
-            <label className="text-xs font-semibold text-base-content/70 block mb-1">Event Title</label>
+            <label className="text-xs font-semibold text-slate-200 block mb-1">
+              Event Title
+            </label>
             <input
               type="text"
               required
-              placeholder="e.g. Project Discussion"
-              className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
+              placeholder="e.g. Project Discussion, Standup"
+              className="glass-input text-xs w-full px-3.5 py-2"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
@@ -353,20 +428,24 @@ export const EventModal = ({ isOpen, onClose, onSendEvent }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-base-content/70 block mb-1">Date</label>
+              <label className="text-xs font-semibold text-slate-200 block mb-1">
+                Date
+              </label>
               <input
                 type="date"
                 required
-                className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
+                className="glass-input text-xs w-full px-3 py-2"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-base-content/70 block mb-1">Time</label>
+              <label className="text-xs font-semibold text-slate-200 block mb-1">
+                Time
+              </label>
               <input
                 type="time"
-                className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
+                className="glass-input text-xs w-full px-3 py-2"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
               />
@@ -374,32 +453,44 @@ export const EventModal = ({ isOpen, onClose, onSendEvent }) => {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-base-content/70 block mb-1">Location / Link</label>
+            <label className="text-xs font-semibold text-slate-200 block mb-1">
+              Location / Link
+            </label>
             <input
               type="text"
-              placeholder="e.g. Office Room 302 or Zoom link"
-              className="input input-bordered border border-base-300 input-sm w-full rounded-xl"
+              placeholder="e.g. Conference Room A or Video Link"
+              className="glass-input text-xs w-full px-3.5 py-2"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-base-content/70 block mb-1">Description (Optional)</label>
+            <label className="text-xs font-semibold text-slate-200 block mb-1">
+              Description (Optional)
+            </label>
             <textarea
               rows={2}
-              placeholder="Add details or agenda..."
-              className="textarea textarea-bordered border border-base-300 w-full rounded-xl text-sm"
+              placeholder="Add agenda or details..."
+              className="glass-input text-xs w-full px-3.5 py-2 resize-none"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-base-300">
-            <button type="button" onClick={onClose} className="btn btn-ghost btn-sm rounded-xl">
+          <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-glass px-4 py-2 text-xs font-medium"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={!title.trim() || !date} className="btn btn-primary btn-sm rounded-xl">
+            <button
+              type="submit"
+              disabled={!title.trim() || !date}
+              className="btn-glow px-5 py-2 text-xs font-semibold"
+            >
               Send Event
             </button>
           </div>

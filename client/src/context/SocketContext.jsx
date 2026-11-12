@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import { io } from "socket.io-client";
 import useAuthStore from "../store/useAuthStore";
 import useChatStore from "../store/useChatStore";
@@ -12,7 +19,7 @@ export const useSocket = () => useContext(SocketContext);
 let sharedAudioCtx = null;
 let lastSoundPlayTime = 0;
 
-export const playNotificationSound = (type = 'receive') => {
+export const playNotificationSound = (type = "receive") => {
   try {
     const currentUser = useAuthStore.getState().authUser;
     if (currentUser?.settings?.soundEnabled === false) return;
@@ -25,40 +32,58 @@ export const playNotificationSound = (type = 'receive') => {
     if (!sharedAudioCtx) {
       sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
-    
+
     // Resume context if suspended (browser auto-play policy)
-    if (sharedAudioCtx.state === 'suspended') {
+    if (sharedAudioCtx.state === "suspended") {
       sharedAudioCtx.resume();
     }
 
     const oscillator = sharedAudioCtx.createOscillator();
     const gainNode = sharedAudioCtx.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(sharedAudioCtx.destination);
-    
-    if (type === 'receive') {
+
+    if (type === "receive") {
       // Two quick beeps for incoming
       oscillator.type = "sine";
       oscillator.frequency.setValueAtTime(800, sharedAudioCtx.currentTime);
-      oscillator.frequency.setValueAtTime(1200, sharedAudioCtx.currentTime + 0.1);
-      
+      oscillator.frequency.setValueAtTime(
+        1200,
+        sharedAudioCtx.currentTime + 0.1,
+      );
+
       gainNode.gain.setValueAtTime(0, sharedAudioCtx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, sharedAudioCtx.currentTime + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, sharedAudioCtx.currentTime + 0.2);
-      
+      gainNode.gain.linearRampToValueAtTime(
+        0.3,
+        sharedAudioCtx.currentTime + 0.05,
+      );
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        sharedAudioCtx.currentTime + 0.2,
+      );
+
       oscillator.start(sharedAudioCtx.currentTime);
       oscillator.stop(sharedAudioCtx.currentTime + 0.2);
-    } else if (type === 'send') {
+    } else if (type === "send") {
       // Single gentle pop/woosh for sent
       oscillator.type = "triangle";
       oscillator.frequency.setValueAtTime(300, sharedAudioCtx.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(100, sharedAudioCtx.currentTime + 0.1);
-      
+      oscillator.frequency.exponentialRampToValueAtTime(
+        100,
+        sharedAudioCtx.currentTime + 0.1,
+      );
+
       gainNode.gain.setValueAtTime(0, sharedAudioCtx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.1, sharedAudioCtx.currentTime + 0.02);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, sharedAudioCtx.currentTime + 0.15);
-      
+      gainNode.gain.linearRampToValueAtTime(
+        0.1,
+        sharedAudioCtx.currentTime + 0.02,
+      );
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        sharedAudioCtx.currentTime + 0.15,
+      );
+
       oscillator.start(sharedAudioCtx.currentTime);
       oscillator.stop(sharedAudioCtx.currentTime + 0.15);
     }
@@ -82,8 +107,6 @@ export const SocketProvider = ({ children }) => {
   const [isVideoCall, setIsVideoCall] = useState(false);
   const [callChatId, setCallChatId] = useState(null);
   const [incomingIceCandidates, setIncomingIceCandidates] = useState([]);
-
-
 
   // Browser notification
   const showBrowserNotification = useCallback((title, body, icon) => {
@@ -111,8 +134,11 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const socketUrl = import.meta.env.VITE_API_BASE_URL || 
-      (window.location.origin.includes("localhost") ? `http://${window.location.hostname}:4500` : "/");
+    const socketUrl =
+      import.meta.env.VITE_API_BASE_URL ||
+      (window.location.origin.includes("localhost")
+        ? `http://${window.location.hostname}:4500`
+        : "/");
 
     const newSocket = io(socketUrl, {
       withCredentials: true,
@@ -151,21 +177,36 @@ export const SocketProvider = ({ children }) => {
 
     // ── Message Received ────────────────────────────────────────────────────
     newSocket.on("message-received", (newMessage) => {
-      const { selectedChat, addMessage, fetchChats, updateLatestMessage, markAsRead } = useChatStore.getState();
+      const {
+        selectedChat,
+        addMessage,
+        fetchChats,
+        updateLatestMessage,
+        markAsRead,
+      } = useChatStore.getState();
       const currentUser = useAuthStore.getState().authUser;
 
-      updateLatestMessage(newMessage.chatId?._id || newMessage.chatId, newMessage);
+      updateLatestMessage(
+        newMessage.chatId?._id || newMessage.chatId,
+        newMessage,
+      );
 
-      if (!selectedChat || selectedChat._id !== (newMessage.chatId?._id || newMessage.chatId)) {
+      if (
+        !selectedChat ||
+        selectedChat._id !== (newMessage.chatId?._id || newMessage.chatId)
+      ) {
         // Not in this chat — show notification
         fetchChats();
-        
+
         const senderName = newMessage.sender?.fullName || "Someone";
         const msgPreview = newMessage.content?.substring(0, 50) || "Attachment";
-        
+
         // Sound
-        if (currentUser?.settings?.soundEnabled !== false && newMessage.sender?._id !== currentUser._id) {
-          playNotificationSound('receive');
+        if (
+          currentUser?.settings?.soundEnabled !== false &&
+          newMessage.sender?._id !== currentUser._id
+        ) {
+          playNotificationSound("receive");
         }
 
         // Browser notification
@@ -173,7 +214,7 @@ export const SocketProvider = ({ children }) => {
           showBrowserNotification(
             `New message from ${senderName}`,
             msgPreview,
-            newMessage.sender?.profilePic
+            newMessage.sender?.profilePic,
           );
         }
 
@@ -182,14 +223,17 @@ export const SocketProvider = ({ children }) => {
       } else {
         // Currently in this chat
         addMessage(newMessage);
-        
+
         // Wait for fetchChats to finish before resetting the unread count locally and on backend
         fetchChats().then(() => {
           markAsRead(newMessage.chatId?._id || newMessage.chatId);
         });
-        
-        if (newMessage.sender?._id !== currentUser._id && currentUser?.settings?.soundEnabled !== false) {
-          playNotificationSound('receive');
+
+        if (
+          newMessage.sender?._id !== currentUser._id &&
+          currentUser?.settings?.soundEnabled !== false
+        ) {
+          playNotificationSound("receive");
         }
 
         // Send read receipt
@@ -218,7 +262,9 @@ export const SocketProvider = ({ children }) => {
 
     // ── Message Status ──────────────────────────────────────────────────────
     newSocket.on("message-status-updated", (data) => {
-      useChatStore.getState().updateMessageStatus(data.messageId, data.status, data.userId);
+      useChatStore
+        .getState()
+        .updateMessageStatus(data.messageId, data.status, data.userId);
     });
 
     // ── Bulk Read ───────────────────────────────────────────────────────────

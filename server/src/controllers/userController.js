@@ -18,7 +18,9 @@ export const getUsersForSidebar = async (req, res) => {
         }
       : {};
 
-    const currentUser = await User.findById(req.user._id).select("blockedUsers");
+    const currentUser = await User.findById(req.user._id).select(
+      "blockedUsers",
+    );
     const blockedIds = currentUser?.blockedUsers || [];
 
     const users = await User.find(keyword)
@@ -46,16 +48,20 @@ export const updateProfile = async (req, res) => {
     if (about !== undefined) updateFields.about = about;
 
     if (settings) {
-      if (settings.theme !== undefined) updateFields["settings.theme"] = settings.theme;
-      if (settings.notifications !== undefined) updateFields["settings.notifications"] = settings.notifications;
-      if (settings.readReceipts !== undefined) updateFields["settings.readReceipts"] = settings.readReceipts;
-      if (settings.lastSeenVisible !== undefined) updateFields["settings.lastSeenVisible"] = settings.lastSeenVisible;
+      if (settings.theme !== undefined)
+        updateFields["settings.theme"] = settings.theme;
+      if (settings.notifications !== undefined)
+        updateFields["settings.notifications"] = settings.notifications;
+      if (settings.readReceipts !== undefined)
+        updateFields["settings.readReceipts"] = settings.readReceipts;
+      if (settings.lastSeenVisible !== undefined)
+        updateFields["settings.lastSeenVisible"] = settings.lastSeenVisible;
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       { $set: updateFields },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     res.status(200).json(updatedUser);
@@ -73,7 +79,9 @@ export const changePassword = async (req, res) => {
       return res.status(400).json({ error: "Both passwords required" });
     }
     if (newPassword.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters" });
+      return res
+        .status(400)
+        .json({ error: "Password must be at least 6 characters" });
     }
 
     const user = await User.findById(req.user._id);
@@ -109,13 +117,15 @@ export const uploadProfileImage = async (req, res) => {
 
     const uploadResponse = await cloudinary.uploader.upload(dataURI, {
       folder: "vibechat_profiles",
-      transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }],
+      transformation: [
+        { width: 400, height: 400, crop: "fill", gravity: "face" },
+      ],
     });
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       { profilePic: uploadResponse.secure_url },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     res.status(200).json(updatedUser);
@@ -136,7 +146,7 @@ export const blockUser = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { $addToSet: { blockedUsers: userId } },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     res.status(200).json(user);
@@ -154,7 +164,7 @@ export const unblockUser = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { $pull: { blockedUsers: userId } },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     res.status(200).json(user);
@@ -183,7 +193,9 @@ export const globalSearch = async (req, res) => {
       .limit(10);
 
     // Get user's chats for context
-    const userChatIds = await Chat.find({ users: req.user._id }).distinct("_id");
+    const userChatIds = await Chat.find({ users: req.user._id }).distinct(
+      "_id",
+    );
 
     // Search messages in user's chats
     const messages = await Message.find({
@@ -207,7 +219,9 @@ export const globalSearch = async (req, res) => {
 // ── Get User Profile by ID ─────────────────────────────────────────────────────
 export const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId).select("-password -blockedUsers");
+    const user = await User.findById(req.params.userId).select(
+      "-password -blockedUsers",
+    );
     if (!user) return res.status(404).json({ error: "User not found" });
     res.status(200).json(user);
   } catch (error) {

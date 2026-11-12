@@ -15,11 +15,15 @@ export const register = async (req, res) => {
 
     email = typeof email === "string" ? email.trim().toLowerCase() : "";
     if (!email || !EMAIL_REGEX.test(email)) {
-      return res.status(400).json({ error: "Please provide a valid email address" });
+      return res
+        .status(400)
+        .json({ error: "Please provide a valid email address" });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters long" });
+      return res
+        .status(400)
+        .json({ error: "Password must be at least 6 characters long" });
     }
 
     const existingUser = await User.findOne({ email });
@@ -31,7 +35,7 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const profilePic = `https://ui-avatars.com/api/?name=${fullName.replace(' ', '+')}&background=random`;
+    const profilePic = `https://ui-avatars.com/api/?name=${fullName.replace(" ", "+")}&background=random`;
 
     const newUser = new User({
       fullName: fullName.trim(),
@@ -52,7 +56,7 @@ export const register = async (req, res) => {
       profilePic: newUser.profilePic,
       phone: newUser.phone,
       about: newUser.about,
-      settings: newUser.settings
+      settings: newUser.settings,
     });
   } catch (error) {
     console.log("Error in Register controller", error.message);
@@ -70,7 +74,9 @@ export const login = async (req, res) => {
 
     email = typeof email === "string" ? email.trim().toLowerCase() : "";
     if (!email || !EMAIL_REGEX.test(email)) {
-      return res.status(400).json({ error: "Please provide a valid email address" });
+      return res
+        .status(400)
+        .json({ error: "Please provide a valid email address" });
     }
 
     const user = await User.findOne({ email });
@@ -94,7 +100,7 @@ export const login = async (req, res) => {
       profilePic: user.profilePic,
       phone: user.phone,
       about: user.about,
-      settings: user.settings
+      settings: user.settings,
     });
   } catch (error) {
     console.log("Error in Login controller", error.message);
@@ -104,11 +110,11 @@ export const login = async (req, res) => {
 
 export const logout = (req, res) => {
   try {
-    res.cookie("jwt", "", { 
+    res.cookie("jwt", "", {
       maxAge: 0,
       httpOnly: true,
       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      secure: process.env.NODE_ENV === "production"
+      secure: process.env.NODE_ENV === "production",
     });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
@@ -119,7 +125,9 @@ export const logout = (req, res) => {
 
 export const checkAuth = async (req, res) => {
   try {
-    const user = await (await import("../model/user.model.js")).default
+    const user = await (
+      await import("../model/user.model.js")
+    ).default
       .findById(req.user._id)
       .select("-password");
     if (!user) return res.status(401).json({ error: "User not found" });
@@ -140,19 +148,21 @@ export const GoogleUserLogin = async (req, res) => {
       return res.status(400).json({ error: "Email is required" });
     }
     let user = await User.findOne({ email });
-    
+
     if (!user) {
       user = new User({
         email,
         fullName,
-        profilePic: profilePic || `https://ui-avatars.com/api/?name=${fullName?.replace(' ', '+')}`,
+        profilePic:
+          profilePic ||
+          `https://ui-avatars.com/api/?name=${fullName?.replace(" ", "+")}`,
         password: "google-auth-no-password",
       });
       await user.save();
     }
-    
+
     generateToken(user._id, res);
-    
+
     res.status(200).json({
       _id: user._id,
       fullName: user.fullName,
@@ -160,7 +170,7 @@ export const GoogleUserLogin = async (req, res) => {
       profilePic: user.profilePic,
       phone: user.phone,
       about: user.about,
-      settings: user.settings
+      settings: user.settings,
     });
   } catch (error) {
     console.log("Error in Google Login", error.message);
@@ -177,18 +187,32 @@ export const forgotPassword = async (req, res) => {
 
     email = typeof email === "string" ? email.trim().toLowerCase() : "";
     if (!EMAIL_REGEX.test(email)) {
-      return res.status(400).json({ error: "Please enter a valid email address" });
+      return res
+        .status(400)
+        .json({ error: "Please enter a valid email address" });
     }
 
     const cleanEmail = email.trim();
     const user = await User.findOne({
       $or: [
         { email: cleanEmail.toLowerCase() },
-        { email: { $regex: new RegExp(`^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
+        {
+          email: {
+            $regex: new RegExp(
+              `^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+              "i",
+            ),
+          },
+        },
       ],
     });
     if (!user) {
-      return res.status(400).json({ error: "No account found with this email address. Please check your email or sign up." });
+      return res
+        .status(400)
+        .json({
+          error:
+            "No account found with this email address. Please check your email or sign up.",
+        });
     }
 
     // Generate 6 digit numeric OTP
@@ -217,39 +241,58 @@ export const resetPassword = async (req, res) => {
     let { email, otp, newPassword } = req.body;
 
     if (!email || !otp || !newPassword) {
-      return res.status(400).json({ error: "Email, OTP and new password are required" });
+      return res
+        .status(400)
+        .json({ error: "Email, OTP and new password are required" });
     }
 
     email = typeof email === "string" ? email.trim().toLowerCase() : "";
     if (newPassword.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters long" });
+      return res
+        .status(400)
+        .json({ error: "Password must be at least 6 characters long" });
     }
 
     const cleanEmail = email.trim();
     const user = await User.findOne({
       $or: [
         { email: cleanEmail.toLowerCase() },
-        { email: { $regex: new RegExp(`^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
+        {
+          email: {
+            $regex: new RegExp(
+              `^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+              "i",
+            ),
+          },
+        },
       ],
     });
     if (!user) {
-      return res.status(400).json({ error: "User account not found with this email address." });
+      return res
+        .status(400)
+        .json({ error: "User account not found with this email address." });
     }
 
     if (!user.resetPasswordOtp || !user.resetPasswordExpires) {
-      return res.status(400).json({ error: "No password reset was requested or OTP has expired" });
+      return res
+        .status(400)
+        .json({ error: "No password reset was requested or OTP has expired" });
     }
 
     if (new Date() > new Date(user.resetPasswordExpires)) {
       user.resetPasswordOtp = null;
       user.resetPasswordExpires = null;
       await user.save();
-      return res.status(400).json({ error: "OTP has expired. Please request a new one." });
+      return res
+        .status(400)
+        .json({ error: "OTP has expired. Please request a new one." });
     }
 
     const isMatch = await bcrypt.compare(otp.trim(), user.resetPasswordOtp);
     if (!isMatch) {
-      return res.status(400).json({ error: "Invalid OTP code. Please check and try again." });
+      return res
+        .status(400)
+        .json({ error: "Invalid OTP code. Please check and try again." });
     }
 
     const salt = await bcrypt.genSalt(10);

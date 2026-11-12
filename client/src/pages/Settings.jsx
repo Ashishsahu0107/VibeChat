@@ -11,15 +11,14 @@ import ImageCropper from '../components/ImageCropper';
 import LogoutModal from '../components/LogoutModal';
 
 const THEMES = [
-  "light", "dark", "black", "claude", "corporate", "ghibli", "gourmet",
-  "luxury", "mintlify", "pastel", "perplexity", "shadcn", "slack",
-  "soft", "spotify", "valorant", "vscode",
+  "dark", "luxury", "black", "spotify", "valorant", "vscode",
+  "light", "corporate", "mintlify", "shadcn", "slack",
 ];
 
 const Section = ({ title, children }) => (
-  <div className="mb-6">
-    <h3 className="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-2 px-1">{title}</h3>
-    <div className="bg-base-200/50 rounded-2xl overflow-hidden border border-base-300">{children}</div>
+  <div className="mb-5">
+    <h3 className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider mb-2 px-1">{title}</h3>
+    <div className="glass-card overflow-hidden border border-white/10 rounded-2xl">{children}</div>
   </div>
 );
 
@@ -27,17 +26,17 @@ const SettingRow = ({ icon, label, value, onClick, children, divider = true }) =
   <div>
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-base-200 transition-colors text-left ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
+      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.05] transition-colors text-left ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
     >
-      <span className="text-primary text-lg shrink-0">{icon}</span>
-      <span className="flex-1 font-medium text-sm">{label}</span>
+      <span className="text-cyan-400 text-lg shrink-0">{icon}</span>
+      <span className="flex-1 font-semibold text-sm text-slate-100">{label}</span>
       {value !== undefined && (
-        <span className="text-sm text-base-content/50">{value}</span>
+        <span className="text-xs text-slate-400 font-medium">{value}</span>
       )}
-      {onClick && <FiChevronRight size={14} className="text-base-content/30 shrink-0" />}
+      {onClick && <FiChevronRight size={14} className="text-slate-500 shrink-0" />}
       {children}
     </button>
-    {divider && <div className="ml-12 border-b border-base-300/50" />}
+    {divider && <div className="ml-12 border-b border-white/[0.06]" />}
   </div>
 );
 
@@ -55,7 +54,7 @@ const Settings = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [activeSection, setActiveSection] = useState('main'); // main | profile | password | notifications | privacy | theme
   const [selectedTheme, setSelectedTheme] = useState(
-    authUser?.settings?.theme || localStorage.getItem('theme') || 'light'
+    authUser?.settings?.theme || localStorage.getItem('theme') || 'dark'
   );
   const fileInputRef = useRef(null);
   const [cropImageSrc, setCropImageSrc] = useState(null);
@@ -131,28 +130,32 @@ const Settings = () => {
   // ── Sub-screens ────────────────────────────────────────────────────────
   if (activeSection === 'profile') {
     return (
-      <div className="h-screen overflow-y-auto bg-base-100">
-        <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-base-100 border-b border-base-300">
-          <button onClick={() => setActiveSection('main')} className="p-2 hover:bg-base-200 rounded-full"><FiArrowLeft size={20} /></button>
-          <h2 className="font-semibold">Edit Profile</h2>
+      <div className="h-full overflow-y-auto p-4 sm:p-6">
+        <div className="flex items-center gap-3 pb-4 mb-4 border-b border-white/10">
+          <button onClick={() => setActiveSection('main')} className="p-2 hover:bg-white/[0.08] rounded-xl text-slate-300 hover:text-white transition-colors cursor-pointer">
+            <FiArrowLeft size={18} />
+          </button>
+          <h2 className="font-bold text-lg text-white">Edit Profile</h2>
         </div>
-        <div className="max-w-lg mx-auto px-4 py-6">
+        <div className="max-w-lg mx-auto glass-card p-6 border border-white/10">
           <form onSubmit={handleSaveProfile} className="space-y-4">
-            <div className="form-control">
-              <label className="label"><span className="label-text font-medium">Full Name</span></label>
-              <input type="text" className="input input-bordered" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} required />
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">Full Name</label>
+              <input type="text" className="glass-input w-full px-3.5 py-2.5 text-sm" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} required />
             </div>
-            <div className="form-control">
-              <label className="label"><span className="label-text font-medium">Phone Number</span></label>
-              <input type="tel" className="input input-bordered" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="Enter phone number" />
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">Phone Number</label>
+              <input type="tel" className="glass-input w-full px-3.5 py-2.5 text-sm" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="Enter phone number" />
             </div>
-            <div className="form-control">
-              <label className="label"><span className="label-text font-medium">About</span></label>
-              <textarea className="textarea textarea-bordered" value={formData.about} onChange={(e) => setFormData({ ...formData, about: e.target.value })} rows={3} placeholder="Tell people about yourself" maxLength={150} />
-              <label className="label"><span className="label-text-alt text-right text-base-content/50">{formData.about.length}/150</span></label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">About</label>
+              <textarea className="glass-input w-full px-3.5 py-2.5 text-sm resize-none block" value={formData.about} onChange={(e) => setFormData({ ...formData, about: e.target.value })} rows={3} placeholder="Tell people about yourself" maxLength={150} />
+              <div className="text-right text-[11px] text-slate-400">
+                {formData.about.length}/150
+              </div>
             </div>
-            <button type="submit" className="btn btn-primary w-full" disabled={isUpdating}>
-              {isUpdating ? <span className="loading loading-spinner loading-sm" /> : <><FiSave size={16} /> Save Changes</>}
+            <button type="submit" className="btn-glow w-full py-3 text-sm font-semibold flex items-center justify-center gap-2 mt-2" disabled={isUpdating}>
+              {isUpdating ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><FiSave size={16} /> Save Changes</>}
             </button>
           </form>
         </div>
@@ -162,27 +165,29 @@ const Settings = () => {
 
   if (activeSection === 'password') {
     return (
-      <div className="h-screen overflow-y-auto bg-base-100">
-        <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-base-100 border-b border-base-300">
-          <button onClick={() => setActiveSection('main')} className="p-2 hover:bg-base-200 rounded-full"><FiArrowLeft size={20} /></button>
-          <h2 className="font-semibold">Change Password</h2>
+      <div className="h-full overflow-y-auto p-4 sm:p-6">
+        <div className="flex items-center gap-3 pb-4 mb-4 border-b border-white/10">
+          <button onClick={() => setActiveSection('main')} className="p-2 hover:bg-white/[0.08] rounded-xl text-slate-300 hover:text-white transition-colors cursor-pointer">
+            <FiArrowLeft size={18} />
+          </button>
+          <h2 className="font-bold text-lg text-white">Change Password</h2>
         </div>
-        <div className="max-w-lg mx-auto px-4 py-6">
+        <div className="max-w-lg mx-auto glass-card p-6 border border-white/10">
           <form onSubmit={handleChangePassword} className="space-y-4">
-            <div className="form-control">
-              <label className="label"><span className="label-text font-medium">Current Password</span></label>
-              <input type="password" className="input input-bordered" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} required />
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">Current Password</label>
+              <input type="password" className="glass-input w-full px-3.5 py-2.5 text-sm" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} required />
             </div>
-            <div className="form-control">
-              <label className="label"><span className="label-text font-medium">New Password</span></label>
-              <input type="password" className="input input-bordered" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} minLength={6} required />
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">New Password</label>
+              <input type="password" className="glass-input w-full px-3.5 py-2.5 text-sm" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} minLength={6} required />
             </div>
-            <div className="form-control">
-              <label className="label"><span className="label-text font-medium">Confirm New Password</span></label>
-              <input type="password" className="input input-bordered" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} required />
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">Confirm New Password</label>
+              <input type="password" className="glass-input w-full px-3.5 py-2.5 text-sm" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} required />
             </div>
-            <button type="submit" className="btn btn-primary w-full" disabled={isUpdating}>
-              {isUpdating ? <span className="loading loading-spinner loading-sm" /> : 'Change Password'}
+            <button type="submit" className="btn-glow w-full py-3 text-sm font-semibold flex items-center justify-center gap-2 mt-2" disabled={isUpdating}>
+              {isUpdating ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Change Password"}
             </button>
           </form>
         </div>
@@ -192,27 +197,48 @@ const Settings = () => {
 
   if (activeSection === 'theme') {
     return (
-      <div className="h-screen overflow-y-auto bg-base-100">
-        <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-base-100 border-b border-base-300">
-          <button onClick={() => setActiveSection('main')} className="p-2 hover:bg-base-200 rounded-full"><FiArrowLeft size={20} /></button>
-          <h2 className="font-semibold">Appearance</h2>
+      <div className="h-full overflow-y-auto p-4 sm:p-6">
+        <div className="flex items-center gap-3 pb-4 mb-4 border-b border-white/10">
+          <button onClick={() => setActiveSection('main')} className="p-2 hover:bg-white/[0.08] rounded-xl text-slate-300 hover:text-white transition-colors cursor-pointer">
+            <FiArrowLeft size={18} />
+          </button>
+          <h2 className="font-bold text-lg text-white">Appearance</h2>
         </div>
-        <div className="px-4 py-4">
-          <p className="text-sm text-base-content/60 mb-4">Choose your preferred theme</p>
+        <div className="max-w-lg mx-auto">
+          <p className="text-xs text-slate-400 mb-4 font-medium uppercase tracking-wider">
+            Choose your preferred interface theme
+          </p>
           <div className="grid grid-cols-2 gap-3">
-            {THEMES.map((theme) => (
-              <button
-                key={theme}
-                onClick={() => handleThemeChange(theme)}
-                className={`p-3 rounded-xl border-2 transition-all text-left ${selectedTheme === theme ? 'border-primary bg-primary/10' : 'border-base-300 hover:border-primary/50 bg-base-200'}`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  {theme === 'dark' || theme === 'black' ? <FiMoon size={14} /> : theme === 'light' ? <FiSun size={14} /> : <FiMonitor size={14} />}
-                  <span className="font-medium text-sm capitalize">{theme}</span>
-                  {selectedTheme === theme && <span className="ml-auto w-2 h-2 bg-primary rounded-full" />}
-                </div>
-              </button>
-            ))}
+            {THEMES.map((theme) => {
+              const isSelected = selectedTheme === theme;
+              return (
+                <button
+                  key={theme}
+                  onClick={() => handleThemeChange(theme)}
+                  className={`p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between cursor-pointer ${
+                    isSelected 
+                      ? "border-cyan-400/60 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-white shadow-lg shadow-cyan-500/15" 
+                      : "border-white/10 hover:border-white/25 bg-white/[0.03] text-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    {theme === "dark" || theme === "black" ? (
+                      <FiMoon size={15} className="text-cyan-400" />
+                    ) : theme === "light" ? (
+                      <FiSun size={15} className="text-amber-400" />
+                    ) : (
+                      <FiMonitor size={15} className="text-purple-400" />
+                    )}
+                    <span className="font-semibold text-xs capitalize">
+                      {theme}
+                    </span>
+                  </div>
+                  {isSelected && (
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -221,87 +247,110 @@ const Settings = () => {
 
   // ── Main Settings Screen ─────────────────────────────────────────────
   return (
-    <div className="h-full overflow-y-auto bg-base-100">
+    <div className="h-full overflow-y-auto select-none">
       {/* Profile Header */}
-      <div className="px-6 pt-6 pb-4 bg-gradient-to-b from-primary/5 to-transparent">
+      <div className="p-5 sm:p-6 border-b border-white/10 bg-gradient-to-b from-cyan-500/10 via-purple-500/5 to-transparent">
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary/20">
+          <div className="relative shrink-0">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-cyan-400/40 p-0.5 bg-slate-900 shadow-xl shadow-cyan-500/20">
               <img
-                src={authUser?.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.fullName || 'U')}&background=7c3aed&color=fff`}
+                src={
+                  authUser?.profilePic ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.fullName || "U")}&background=7c3aed&color=fff`
+                }
                 alt="Profile"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover rounded-xl"
               />
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary text-primary-content rounded-full flex items-center justify-center text-xs shadow-md"
+              className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-gradient-to-tr from-cyan-500 to-blue-600 text-white rounded-xl flex items-center justify-center text-xs shadow-lg border border-white/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              title="Upload profile picture"
             >
-              {isUploading ? <span className="loading loading-spinner loading-xs" /> : <FiCamera size={12} />}
+              {isUploading ? (
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <FiCamera size={13} />
+              )}
             </button>
-            <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              className="hidden"
+              accept="image/*"
+            />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-base truncate">{authUser?.fullName}</h3>
-            <p className="text-sm text-base-content/60 truncate">{authUser?.email}</p>
-            <p className="text-xs text-base-content/50 mt-0.5 truncate">{authUser?.about}</p>
+            <h3 className="font-bold text-base text-white truncate">
+              {authUser?.fullName}
+            </h3>
+            <p className="text-xs text-cyan-400/90 truncate font-mono mt-0.5">
+              {authUser?.email}
+            </p>
+            <p className="text-xs text-slate-400 mt-1 truncate">
+              {authUser?.about || "No status set"}
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="px-4 pb-8">
+      <div className="p-4 pb-12 space-y-2">
         {/* Account */}
         <Section title="Account">
-          <SettingRow icon={<FiUser />} label="Edit Profile" onClick={() => setActiveSection('profile')} />
-          <SettingRow icon={<FiLock />} label="Change Password" onClick={() => setActiveSection('password')} divider={false} />
+          <SettingRow
+            icon={<FiUser />}
+            label="Edit Profile"
+            onClick={() => setActiveSection("profile")}
+          />
+          <SettingRow
+            icon={<FiLock />}
+            label="Change Password"
+            onClick={() => setActiveSection("password")}
+            divider={false}
+          />
         </Section>
 
         {/* Appearance */}
         <Section title="Appearance">
-          <SettingRow icon={<FiMoon />} label="Theme" value={selectedTheme} onClick={() => setActiveSection('theme')} divider={false} />
+          <SettingRow
+            icon={<FiMoon />}
+            label="Theme"
+            value={selectedTheme}
+            onClick={() => setActiveSection("theme")}
+            divider={false}
+          />
         </Section>
 
         {/* Notifications */}
         <Section title="Notifications">
-          <SettingRow
-            icon={<FiBell />}
-            label="Message Notifications"
-            divider
-          >
+          <SettingRow icon={<FiBell />} label="Message Notifications" divider>
             <input
               type="checkbox"
-              className="toggle toggle-primary toggle-sm"
+              className="accent-cyan-400 w-4 h-4 cursor-pointer"
               checked={authUser?.settings?.notifications !== false}
-              onChange={() => handleToggleSetting('notifications')}
+              onChange={() => handleToggleSetting("notifications")}
             />
           </SettingRow>
-          <SettingRow
-            icon={<FiBell />}
-            label="Sound"
-            divider={false}
-          >
+          <SettingRow icon={<FiBell />} label="Sound Alerts" divider={false}>
             <input
               type="checkbox"
-              className="toggle toggle-primary toggle-sm"
+              className="accent-cyan-400 w-4 h-4 cursor-pointer"
               checked={authUser?.settings?.soundEnabled !== false}
-              onChange={() => handleToggleSetting('soundEnabled')}
+              onChange={() => handleToggleSetting("soundEnabled")}
             />
           </SettingRow>
         </Section>
 
         {/* Privacy */}
         <Section title="Privacy">
-          <SettingRow
-            icon={<FiEye />}
-            label="Last Seen & Online"
-            divider
-          >
+          <SettingRow icon={<FiEye />} label="Last Seen & Online" divider>
             <input
               type="checkbox"
-              className="toggle toggle-primary toggle-sm"
+              className="accent-cyan-400 w-4 h-4 cursor-pointer"
               checked={authUser?.settings?.lastSeenVisible !== false}
-              onChange={() => handleToggleSetting('lastSeenVisible')}
+              onChange={() => handleToggleSetting("lastSeenVisible")}
             />
           </SettingRow>
           <SettingRow
@@ -311,28 +360,42 @@ const Settings = () => {
           >
             <input
               type="checkbox"
-              className="toggle toggle-primary toggle-sm"
+              className="accent-cyan-400 w-4 h-4 cursor-pointer"
               checked={authUser?.settings?.readReceipts !== false}
-              onChange={() => handleToggleSetting('readReceipts')}
+              onChange={() => handleToggleSetting("readReceipts")}
             />
           </SettingRow>
         </Section>
 
         {/* Account Info */}
         <Section title="Info">
-          <SettingRow icon={<FiPhone />} label="Phone" value={authUser?.phone || 'Not set'} divider />
-          <SettingRow icon={<FiInfo />} label="About" value={authUser?.about?.substring(0, 30) + (authUser?.about?.length > 30 ? '…' : '') || ''} divider={false} />
+          <SettingRow
+            icon={<FiPhone />}
+            label="Phone"
+            value={authUser?.phone || "Not set"}
+            divider
+          />
+          <SettingRow
+            icon={<FiInfo />}
+            label="About"
+            value={
+              authUser?.about?.substring(0, 30) +
+                (authUser?.about?.length > 30 ? "…" : "") || "Hey there! I am using VibeChat."
+            }
+            divider={false}
+          />
         </Section>
 
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3.5 bg-error/10 text-error rounded-2xl hover:bg-error/20 transition-colors border border-error/20"
+          className="w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-sm border border-rose-500/25 transition-all mt-4 cursor-pointer active:scale-98"
         >
-          <FiLogOut size={18} />
-          <span className="font-semibold text-sm">Logout</span>
+          <FiLogOut size={16} />
+          <span>Sign Out</span>
         </button>
       </div>
+
       {/* Modals & Portals */}
       {cropImageSrc && (
         <ImageCropper

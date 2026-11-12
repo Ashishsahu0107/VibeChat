@@ -13,13 +13,21 @@ import {
 } from "../controllers/userController.js";
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 router.get("/", protectRoute, getUsersForSidebar);
 router.get("/search", protectRoute, globalSearch);
 router.get("/:userId", protectRoute, getUserById);
 router.put("/profile", protectRoute, updateProfile);
-router.post("/profile/image", protectRoute, upload.single("image"), uploadProfileImage);
+router.post(
+  "/profile/image",
+  protectRoute,
+  upload.single("image"),
+  uploadProfileImage,
+);
 router.put("/change-password", protectRoute, changePassword);
 router.post("/block/:userId", protectRoute, blockUser);
 router.post("/unblock/:userId", protectRoute, unblockUser);

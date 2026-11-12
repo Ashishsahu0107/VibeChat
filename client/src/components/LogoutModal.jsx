@@ -6,7 +6,7 @@ import useAuthStore from "../store/useAuthStore";
 
 /**
  * Reusable Logout Confirmation Modal
- * Replaces standard browser window.confirm with a modern, responsive popup.
+ * Replaces standard browser window.confirm with a modern, glassmorphic popup.
  */
 const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
   const [loading, setLoading] = useState(false);
@@ -48,62 +48,62 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[250] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="logout-modal-title"
     >
       <div
-        className="bg-base-100 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-base-300 p-6 flex flex-col items-center text-center relative animate-in zoom-in-95 duration-200"
+        className="glass-card w-full max-w-sm overflow-hidden border border-white/20 p-6 flex flex-col items-center text-center relative shadow-2xl shadow-rose-950/40 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Subtle top rose/purple accent line */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-rose-500/50 to-transparent" />
+
         {/* Close Button */}
         <button
           onClick={onClose}
-          disabled={loading}
-          className="absolute top-4 right-4 p-2 text-base-content/40 hover:text-base-content hover:bg-base-200 rounded-full transition-colors"
-          aria-label="Close modal"
+          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-full transition-colors cursor-pointer"
+          aria-label="Close"
         >
           <FiX size={18} />
         </button>
 
-        {/* Warning / Logout Icon */}
-        <div className="w-14 h-14 rounded-full bg-error/10 text-error flex items-center justify-center mb-4 border border-error/20 shadow-inner">
-          <FiLogOut size={26} className="translate-x-0.5" />
+        {/* Icon */}
+        <div className="w-14 h-14 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 mb-4 shadow-lg shadow-rose-500/15">
+          <FiLogOut size={24} className="translate-x-0.5" />
         </div>
 
-        {/* Title & Description */}
-        <h3 id="logout-modal-title" className="text-xl font-bold text-base-content mb-2">
-          Log Out?
+        {/* Text */}
+        <h3
+          id="logout-modal-title"
+          className="text-xl font-bold text-white mb-2"
+        >
+          Confirm Sign Out
         </h3>
-        <p className="text-sm text-base-content/70 mb-6 leading-relaxed px-2">
-          Are you sure you want to log out of VibeChat? You will need to sign in again to access your messages and calls.
+        <p className="text-sm text-slate-300/80 mb-6 leading-relaxed">
+          Are you sure you want to end your session? You can sign back in at any time.
         </p>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3 w-full">
+        <div className="flex gap-3 w-full">
           <button
-            type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 btn btn-ghost border border-base-300 hover:bg-base-200 text-base-content rounded-xl font-medium"
+            className="btn-glass flex-1 py-2.5 text-sm font-medium"
           >
             Cancel
           </button>
           <button
-            type="button"
             onClick={handleLogout}
             disabled={loading}
-            className="flex-1 btn btn-error text-white rounded-xl font-semibold shadow-md shadow-error/20 flex items-center justify-center gap-2"
+            className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 border border-white/20 shadow-lg shadow-rose-600/30 transition-all active:scale-95 flex items-center justify-center cursor-pointer"
           >
             {loading ? (
-              <span className="loading loading-spinner loading-sm"></span>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <>
-                <FiLogOut size={16} />
-                <span>Log Out</span>
-              </>
+              "Sign Out"
             )}
           </button>
         </div>

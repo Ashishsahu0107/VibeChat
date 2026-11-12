@@ -42,47 +42,54 @@ const NewChatModal = ({ onClose, onSelectChat }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-      <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-base-300">
-          <h3 className="font-semibold flex-1">New Chat</h3>
-          <button onClick={onClose} className="p-1.5 hover:bg-base-200 rounded-full"><FiX size={18} /></button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md px-4 animate-in fade-in duration-200">
+      <div className="glass-card w-full max-w-sm overflow-hidden border border-white/20 shadow-2xl shadow-blue-950/50 animate-in zoom-in-95 duration-200">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
+          <h3 className="font-bold text-white flex-1 text-base">Start New Chat</h3>
+          <button 
+            onClick={onClose} 
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-full transition-colors cursor-pointer"
+          >
+            <FiX size={18} />
+          </button>
         </div>
-        <div className="px-4 py-3">
+        <div className="px-5 py-3">
           <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" size={16} />
+            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
             <input
               autoFocus
               type="text"
-              placeholder="Search users..."
-              className="input input-bordered input-sm w-full pl-9 rounded-full"
+              placeholder="Search by name or email..."
+              className="glass-input text-xs w-full pl-9 pr-3 py-2.5"
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
         </div>
-        <div className="max-h-72 overflow-y-auto px-2 pb-3">
+        <div className="max-h-72 overflow-y-auto px-3 pb-3 space-y-1">
           {loading && (
-            <div className="flex justify-center py-6"><div className="loading loading-spinner loading-sm" /></div>
+            <div className="flex justify-center py-8">
+              <div className="w-5 h-5 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+            </div>
           )}
           {!loading && users.length === 0 && search && (
-            <div className="text-center py-8 text-sm text-base-content/50">No users found</div>
+            <div className="text-center py-8 text-xs text-slate-400 font-medium">No users found</div>
           )}
           {!loading && !search && (
-            <div className="text-center py-8 text-sm text-base-content/50">Search for a user to start chatting</div>
+            <div className="text-center py-8 text-xs text-slate-400">Search for a user to start chatting</div>
           )}
           {users.map((u) => (
             <div
               key={u._id}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-base-200 cursor-pointer transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] cursor-pointer transition-colors border border-transparent hover:border-white/[0.06]"
               onClick={() => handleStartChat(u._id)}
             >
-              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-white/15">
                 <img src={u.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}`} alt="" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm">{u.fullName}</div>
-                <div className="text-xs text-base-content/50 truncate">{u.email}</div>
+                <div className="font-semibold text-sm text-white">{u.fullName}</div>
+                <div className="text-xs text-slate-400 truncate">{u.email}</div>
               </div>
             </div>
           ))}
@@ -117,11 +124,15 @@ const NewGroupModal = ({ onClose, onSelectChat }) => {
     }
   };
 
-  useEffect(() => { handleSearch(""); }, []);
+  useEffect(() => {
+    handleSearch("");
+  }, []);
 
   const toggleUser = (u) => {
     setSelectedUsers((prev) =>
-      prev.find((x) => x._id === u._id) ? prev.filter((x) => x._id !== u._id) : [...prev, u]
+      prev.find((x) => x._id === u._id)
+        ? prev.filter((x) => x._id !== u._id)
+        : [...prev, u],
     );
   };
 
@@ -142,31 +153,40 @@ const NewGroupModal = ({ onClose, onSelectChat }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-      <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-base-300">
-          <h3 className="font-semibold flex-1">New Group</h3>
-          <button onClick={onClose} className="p-1.5 hover:bg-base-200 rounded-full"><FiX size={18} /></button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md px-4 animate-in fade-in duration-200">
+      <div className="glass-card w-full max-w-sm overflow-hidden border border-white/20 shadow-2xl shadow-purple-950/50 animate-in zoom-in-95 duration-200">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
+          <h3 className="font-bold text-white flex-1 text-base">Create New Group</h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-full transition-colors cursor-pointer"
+          >
+            <FiX size={18} />
+          </button>
         </div>
 
         {step === 1 && (
-          <div className="px-4 py-4 space-y-3">
+          <div className="px-5 py-5 space-y-4">
             <div>
-              <label className="label-text text-xs font-medium text-base-content/70">Group Name *</label>
+              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block mb-1.5">
+                Group Name *
+              </label>
               <input
                 autoFocus
                 type="text"
-                placeholder="e.g. Team Alpha"
-                className="input input-bordered input-sm w-full mt-1"
+                placeholder="e.g. Design Systems, Team Vibe"
+                className="glass-input text-xs w-full px-3.5 py-2.5"
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
               />
             </div>
             <div>
-              <label className="label-text text-xs font-medium text-base-content/70">Description (optional)</label>
+              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block mb-1.5">
+                Description (optional)
+              </label>
               <textarea
                 placeholder="What's this group about?"
-                className="textarea textarea-bordered textarea-sm w-full mt-1"
+                className="glass-input text-xs w-full px-3.5 py-2.5 resize-none block"
                 value={groupDesc}
                 onChange={(e) => setGroupDesc(e.target.value)}
                 rows={2}
@@ -175,9 +195,9 @@ const NewGroupModal = ({ onClose, onSelectChat }) => {
             <button
               onClick={() => setStep(2)}
               disabled={!groupName.trim()}
-              className="btn btn-primary btn-sm w-full"
+              className="btn-glow w-full py-2.5 text-xs font-semibold mt-2"
             >
-              Next: Add Members
+              Next: Select Members
             </button>
           </div>
         )}
@@ -185,55 +205,85 @@ const NewGroupModal = ({ onClose, onSelectChat }) => {
         {step === 2 && (
           <div>
             {selectedUsers.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 px-3 py-2 border-b border-base-300 bg-base-200/50">
+              <div className="flex flex-wrap gap-1.5 px-4 py-2.5 border-b border-white/10 bg-white/[0.02]">
                 {selectedUsers.map((u) => (
-                  <div key={u._id} className="flex items-center gap-1 bg-primary/20 text-primary text-xs rounded-full px-2 py-1">
+                  <div
+                    key={u._id}
+                    className="flex items-center gap-1.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/30 text-xs rounded-full px-2.5 py-0.5"
+                  >
                     <span>{u.fullName.split(" ")[0]}</span>
-                    <button onClick={() => toggleUser(u)}><FiX size={12} /></button>
+                    <button onClick={() => toggleUser(u)} className="hover:text-white cursor-pointer">
+                      <FiX size={12} />
+                    </button>
                   </div>
                 ))}
               </div>
             )}
-            <div className="px-3 py-2">
+            <div className="px-4 py-2.5">
               <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" size={14} />
+                <FiSearch
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  size={14}
+                />
                 <input
                   type="text"
-                  placeholder="Search users..."
-                  className="input input-bordered input-sm w-full pl-9 rounded-full"
+                  placeholder="Search participants..."
+                  className="glass-input text-xs w-full pl-9 pr-3 py-2"
                   value={search}
                   onChange={(e) => handleSearch(e.target.value)}
                 />
               </div>
             </div>
-            <div className="max-h-52 overflow-y-auto px-2">
+            <div className="max-h-52 overflow-y-auto px-3 space-y-1">
               {allUsers.map((u) => {
                 const isSelected = selectedUsers.some((x) => x._id === u._id);
                 return (
                   <div
                     key={u._id}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-colors ${isSelected ? "bg-primary/10" : "hover:bg-base-200"}`}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+                      isSelected 
+                        ? "bg-gradient-to-r from-cyan-500/15 to-purple-500/15 border border-cyan-500/30 text-white" 
+                        : "hover:bg-white/[0.05] text-slate-200"
+                    }`}
                     onClick={() => toggleUser(u)}
                   >
-                    <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
-                      <img src={u.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}`} alt="" className="w-full h-full object-cover" />
+                    <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-white/10">
+                      <img
+                        src={
+                          u.profilePic ||
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}`
+                        }
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm">{u.fullName}</div>
+                      <div className="font-medium text-xs truncate">{u.fullName}</div>
                     </div>
-                    {isSelected && <FiCheck size={16} className="text-primary shrink-0" />}
+                    {isSelected && (
+                      <FiCheck size={14} className="text-cyan-400 shrink-0" />
+                    )}
                   </div>
                 );
               })}
             </div>
-            <div className="flex gap-2 px-3 py-3 border-t border-base-300">
-              <button onClick={() => setStep(1)} className="btn btn-ghost btn-sm flex-1">Back</button>
+            <div className="flex gap-2 px-4 py-3 border-t border-white/10 mt-2">
+              <button
+                onClick={() => setStep(1)}
+                className="btn-glass flex-1 py-2 text-xs font-medium"
+              >
+                Back
+              </button>
               <button
                 onClick={handleCreate}
                 disabled={creating || selectedUsers.length < 1}
-                className="btn btn-primary btn-sm flex-1"
+                className="btn-glow flex-1 py-2 text-xs font-semibold"
               >
-                {creating ? <div className="loading loading-spinner loading-xs" /> : "Create Group"}
+                {creating ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
+                ) : (
+                  "Create Group"
+                )}
               </button>
             </div>
           </div>
@@ -257,24 +307,64 @@ const ChatContextMenu = ({ chat, userState, x, y, onClose, onAction }) => {
   return (
     <div
       ref={menuRef}
-      className="fixed z-[200] bg-base-100 border border-base-300 rounded-xl shadow-2xl w-44 py-1 overflow-hidden"
-      style={{ top: y, left: Math.min(x, window.innerWidth - 190) }}
+      className="fixed z-[200] glass-panel border border-white/15 rounded-2xl shadow-2xl w-48 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      style={{ top: y, left: Math.min(x, window.innerWidth - 200) }}
     >
-      <CMenuBtn icon={<BsPinAngle size={14} />} label={userState?.isPinned ? "Unpin" : "Pin"} onClick={() => { onAction("pin"); onClose(); }} />
-      <CMenuBtn icon={userState?.isMuted ? <FiBellOff size={14} /> : <FiBell size={14} />} label={userState?.isMuted ? "Unmute" : "Mute"} onClick={() => { onAction("mute"); onClose(); }} />
-      <CMenuBtn icon={<FiArchive size={14} />} label={userState?.isArchived ? "Unarchive" : "Archive"} onClick={() => { onAction("archive"); onClose(); }} />
-      <CMenuBtn icon={<FiTrash2 size={14} />} label="Clear chat" onClick={() => { onAction("clear"); onClose(); }} className="text-warning" />
-      <CMenuBtn icon={<FiTrash2 size={14} />} label={chat.isGroupChat ? "Leave group" : "Delete chat"} onClick={() => { onAction("delete"); onClose(); }} className="text-error" />
+      <CMenuBtn
+        icon={<BsPinAngle size={14} />}
+        label={userState?.isPinned ? "Unpin Chat" : "Pin Chat"}
+        onClick={() => {
+          onAction("pin");
+          onClose();
+        }}
+      />
+      <CMenuBtn
+        icon={
+          userState?.isMuted ? <FiBellOff size={14} /> : <FiBell size={14} />
+        }
+        label={userState?.isMuted ? "Unmute Notifications" : "Mute Notifications"}
+        onClick={() => {
+          onAction("mute");
+          onClose();
+        }}
+      />
+      <CMenuBtn
+        icon={<FiArchive size={14} />}
+        label={userState?.isArchived ? "Unarchive Chat" : "Archive Chat"}
+        onClick={() => {
+          onAction("archive");
+          onClose();
+        }}
+      />
+      <div className="my-1 border-t border-white/10" />
+      <CMenuBtn
+        icon={<FiTrash2 size={14} />}
+        label="Clear Messages"
+        onClick={() => {
+          onAction("clear");
+          onClose();
+        }}
+        className="text-amber-400 hover:text-amber-300"
+      />
+      <CMenuBtn
+        icon={<FiTrash2 size={14} />}
+        label={chat.isGroupChat ? "Leave Group" : "Delete Chat"}
+        onClick={() => {
+          onAction("delete");
+          onClose();
+        }}
+        className="text-rose-400 hover:text-rose-300"
+      />
     </div>
   );
 };
 
 const CMenuBtn = ({ icon, label, onClick, className = "" }) => (
   <button
-    className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-base-200 transition-colors text-left ${className}`}
+    className={`w-full flex items-center gap-3 px-4 py-2 text-xs font-medium hover:bg-white/[0.08] transition-colors text-left text-slate-200 cursor-pointer ${className}`}
     onClick={onClick}
   >
-    <span className="text-base-content/60">{icon}</span>
+    <span className="shrink-0">{icon}</span>
     <span>{label}</span>
   </button>
 );
@@ -295,28 +385,44 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
     fetchChats();
   }, []);
 
-  const filteredChats = chats.filter((chat) => {
-    const chatName = chat.isGroupChat
-      ? chat.groupName
-      : chat.users?.find((u) => String(u._id) !== String(authUser._id))?.fullName;
-    const matchesSearch = chatName?.toLowerCase().includes(search.toLowerCase());
-    const userState = chat.userStates?.find((s) => s.userId?.toString() === authUser._id.toString() || s.userId === authUser._id);
-    const isArchived = userState?.isArchived;
+  const filteredChats = chats
+    .filter((chat) => {
+      const chatName = chat.isGroupChat
+        ? chat.groupName
+        : chat.users?.find((u) => String(u._id) !== String(authUser._id))
+            ?.fullName;
+      const matchesSearch = chatName
+        ?.toLowerCase()
+        .includes(search.toLowerCase());
+      const userState = chat.userStates?.find(
+        (s) =>
+          s.userId?.toString() === authUser._id.toString() ||
+          s.userId === authUser._id,
+      );
+      const isArchived = userState?.isArchived;
 
-    return matchesSearch && (showArchived ? isArchived : !isArchived);
-  }).sort((a, b) => {
-    const getUserState = (chat) => chat.userStates?.find(
-      (s) => s.userId?.toString() === authUser._id.toString() || s.userId === authUser._id
-    );
-    const aState = getUserState(a);
-    const bState = getUserState(b);
-    if (aState?.isPinned && !bState?.isPinned) return -1;
-    if (!aState?.isPinned && bState?.isPinned) return 1;
-    return new Date(b.updatedAt) - new Date(a.updatedAt);
-  });
+      return matchesSearch && (showArchived ? isArchived : !isArchived);
+    })
+    .sort((a, b) => {
+      const getUserState = (chat) =>
+        chat.userStates?.find(
+          (s) =>
+            s.userId?.toString() === authUser._id.toString() ||
+            s.userId === authUser._id,
+        );
+      const aState = getUserState(a);
+      const bState = getUserState(b);
+      if (aState?.isPinned && !bState?.isPinned) return -1;
+      if (!aState?.isPinned && bState?.isPinned) return 1;
+      return new Date(b.updatedAt) - new Date(a.updatedAt);
+    });
 
   const archivedCount = chats.filter((c) => {
-    const s = c.userStates?.find((s) => s.userId?.toString() === authUser._id.toString() || s.userId === authUser._id);
+    const s = c.userStates?.find(
+      (s) =>
+        s.userId?.toString() === authUser._id.toString() ||
+        s.userId === authUser._id,
+    );
     return s?.isArchived;
   }).length;
 
@@ -328,7 +434,9 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
 
   const handleContextAction = async (chat, action) => {
     const userState = chat.userStates?.find(
-      (s) => s.userId?.toString() === authUser._id.toString() || s.userId === authUser._id
+      (s) =>
+        s.userId?.toString() === authUser._id.toString() ||
+        s.userId === authUser._id,
     );
     try {
       switch (action) {
@@ -339,13 +447,16 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
           await updateChatState(chat._id, { isMuted: !userState?.isMuted });
           break;
         case "archive":
-          await updateChatState(chat._id, { isArchived: !userState?.isArchived });
+          await updateChatState(chat._id, {
+            isArchived: !userState?.isArchived,
+          });
           break;
         case "clear":
-          if (confirm("Clear all messages?")) await updateChatState(chat._id, { clearChat: true });
+          if (confirm("Clear all messages in this conversation?"))
+            await updateChatState(chat._id, { clearChat: true });
           break;
         case "delete":
-          if (confirm(chat.isGroupChat ? "Leave group?" : "Delete chat?")) {
+          if (confirm(chat.isGroupChat ? "Leave group conversation?" : "Delete this conversation?")) {
             await deleteChat(chat._id);
           }
           break;
@@ -357,35 +468,44 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-base-100">
+    <div className="flex flex-col h-full w-full select-none">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-base-300 shrink-0">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xl font-bold">Chats</h2>
-          <div className="flex items-center gap-1">
+      <div className="p-4 border-b border-white/10 shrink-0">
+        <div className="flex items-center justify-between mb-3.5">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-white tracking-tight">Chats</h2>
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
+              {filteredChats.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => setShowNewGroup(true)}
-              className="p-2 hover:bg-base-200 rounded-full transition-colors text-base-content/60 hover:text-base-content"
+              className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 hover:text-white transition-all cursor-pointer"
               title="New Group"
             >
-              <FiUsers size={18} />
+              <FiUsers size={16} />
             </button>
             <button
               onClick={() => setShowNewChat(true)}
-              className="p-2 hover:bg-base-200 rounded-full transition-colors text-base-content/60 hover:text-base-content"
+              className="p-2 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white shadow-md shadow-blue-500/25 border border-white/20 transition-all hover:scale-105 active:scale-95 cursor-pointer"
               title="New Chat"
             >
-              <FiPlus size={20} />
+              <FiPlus size={17} />
             </button>
           </div>
         </div>
 
+        {/* Search */}
         <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" size={15} />
+          <FiSearch
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+            size={14}
+          />
           <input
             type="text"
-            placeholder="Search or start new chat"
-            className="input input-bordered input-sm w-full pl-9 rounded-full bg-base-200 border-none focus:outline-none"
+            placeholder="Search conversations..."
+            className="glass-input text-xs w-full pl-9 pr-3 py-2.5"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -396,44 +516,63 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
       {archivedCount > 0 && (
         <button
           onClick={() => setShowArchived(!showArchived)}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors border-b border-base-300 ${showArchived ? "bg-primary/10 text-primary" : "hover:bg-base-200 text-base-content/60"}`}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold transition-colors border-b border-white/10 cursor-pointer ${
+            showArchived 
+              ? "bg-cyan-500/10 text-cyan-300 border-cyan-500/20" 
+              : "hover:bg-white/[0.04] text-slate-400"
+          }`}
         >
-          <FiArchive size={14} />
-          <span>Archived Chats</span>
-          <span className="ml-auto badge badge-sm badge-neutral">{archivedCount}</span>
+          <FiArchive size={13} />
+          <span>Archived Conversations</span>
+          <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-white/[0.08] text-slate-300">
+            {archivedCount}
+          </span>
         </button>
       )}
 
       {/* Chat List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
         {filteredChats.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full py-16 text-base-content/40">
-            <BsChatDotsFill size={48} className="mb-4 opacity-20" />
-            <p className="text-sm font-medium">No chats yet</p>
-            <p className="text-xs mt-1">Click + to start a conversation</p>
+          <div className="flex flex-col items-center justify-center h-full py-16 text-slate-400/60">
+            <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mb-3">
+              <BsChatDotsFill size={28} className="opacity-40 text-cyan-400" />
+            </div>
+            <p className="text-sm font-semibold text-slate-300">No conversations yet</p>
+            <p className="text-xs text-slate-500 mt-1">Click the + button to start a chat</p>
           </div>
         ) : (
           filteredChats.map((chat) => {
             const otherUser = chat.isGroupChat
               ? null
               : chat.users?.find((u) => String(u._id) !== String(authUser._id));
-            const chatName = chat.isGroupChat ? chat.groupName : otherUser?.fullName;
+            const chatName = chat.isGroupChat
+              ? chat.groupName
+              : otherUser?.fullName;
             const chatPic = chat.isGroupChat
-              ? (chat.groupAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(chatName || "G")}&background=7c3aed&color=fff`)
-              : (otherUser?.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(chatName || "U")}`);
-            const isOnline = otherUser ? onlineUsers.includes(otherUser._id) : false;
+              ? chat.groupAvatar ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(chatName || "G")}&background=7c3aed&color=fff`
+              : otherUser?.profilePic ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(chatName || "U")}`;
+            const isOnline = otherUser
+              ? onlineUsers.includes(otherUser._id)
+              : false;
             const userState = chat.userStates?.find(
-              (s) => s.userId?.toString() === authUser._id.toString() || s.userId === authUser._id
+              (s) =>
+                s.userId?.toString() === authUser._id.toString() ||
+                s.userId === authUser._id,
             );
             const unreadCount = userState?.unreadCount || 0;
             const isPinned = userState?.isPinned;
             const isMuted = userState?.isMuted;
 
+            const isSelected = selectedUser?._id === chat._id;
+
             const lastMessage = chat.latestMessage;
             const lastMsgText = lastMessage
               ? lastMessage.sender?._id === authUser._id
                 ? `You: ${lastMessage.content || (lastMessage.attachments?.length ? "📎 Attachment" : "")}`
-                : lastMessage.content || (lastMessage.attachments?.length ? "📎 Attachment" : "")
+                : lastMessage.content ||
+                  (lastMessage.attachments?.length ? "📎 Attachment" : "")
               : "Start chatting";
 
             return (
@@ -441,39 +580,65 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
                 key={chat._id}
                 onContextMenu={(e) => handleContextMenu(e, chat)}
                 onClick={() => onSelectUser(chat)}
-                className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-base-300/40 ${
-                  selectedUser?._id === chat._id
-                    ? "bg-base-200"
-                    : "hover:bg-base-200/50"
+                className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl cursor-pointer transition-all duration-150 border ${
+                  isSelected
+                    ? "bg-gradient-to-r from-blue-600/25 via-purple-600/20 to-transparent border-cyan-500/40 shadow-lg shadow-black/20"
+                    : "border-transparent hover:bg-white/[0.05] hover:border-white/[0.05]"
                 }`}
               >
                 {/* Avatar */}
                 <div className="relative shrink-0">
-                  <div className="w-12 h-12 rounded-full overflow-hidden">
-                    <img src={chatPic} alt={chatName} className="w-full h-full object-cover" />
+                  <div className={`w-12 h-12 rounded-2xl overflow-hidden border ${isSelected ? 'border-cyan-400/50 ring-2 ring-cyan-500/20' : 'border-white/15'}`}>
+                    <img
+                      src={chatPic}
+                      alt={chatName}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   {isOnline && !chat.isGroupChat && (
-                    <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-success border-2 border-base-100 rounded-full" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-[#0c1324] rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                   )}
                 </div>
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      {isPinned && <BsPinAngle size={11} className="text-base-content/40 shrink-0" />}
-                      <span className="font-semibold text-sm truncate">{chatName}</span>
+                      {isPinned && (
+                        <BsPinAngle
+                          size={12}
+                          className="text-cyan-400 shrink-0 rotate-45"
+                        />
+                      )}
+                      <span className={`font-semibold text-sm truncate ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                        {chatName}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-base-content/40 whitespace-nowrap ml-2 shrink-0">
-                      {lastMessage ? new Date(lastMessage.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                    <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2 shrink-0">
+                      {lastMessage
+                        ? new Date(lastMessage.createdAt).toLocaleTimeString(
+                            [],
+                            { hour: "2-digit", minute: "2-digit" },
+                          )
+                        : ""}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs text-base-content/55 truncate flex-1">{lastMsgText}</p>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {isMuted && <FiBellOff size={11} className="text-base-content/40" />}
+                    <p className={`text-xs truncate flex-1 ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
+                      {lastMsgText}
+                    </p>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {isMuted && (
+                        <FiBellOff size={12} className="text-slate-500" />
+                      )}
                       {unreadCount > 0 && (
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${isMuted ? "bg-base-300 text-base-content/60" : "bg-primary text-primary-content"}`}>
+                        <div
+                          className={`min-w-5 h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                            isMuted 
+                              ? "bg-slate-700 text-slate-300" 
+                              : "bg-gradient-to-tr from-cyan-500 to-purple-600 text-white shadow-md shadow-cyan-500/30"
+                          }`}
+                        >
                           {unreadCount > 99 ? "99+" : unreadCount}
                         </div>
                       )}
@@ -491,7 +656,7 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
         <ChatContextMenu
           chat={contextMenu.chat}
           userState={contextMenu.chat.userStates?.find(
-            (s) => s.userId?.toString() === authUser._id.toString()
+            (s) => s.userId?.toString() === authUser._id.toString(),
           )}
           x={contextMenu.x}
           y={contextMenu.y}
@@ -504,13 +669,19 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
       {showNewChat && (
         <NewChatModal
           onClose={() => setShowNewChat(false)}
-          onSelectChat={(chat) => { onSelectUser(chat); setShowNewChat(false); }}
+          onSelectChat={(chat) => {
+            onSelectUser(chat);
+            setShowNewChat(false);
+          }}
         />
       )}
       {showNewGroup && (
         <NewGroupModal
           onClose={() => setShowNewGroup(false)}
-          onSelectChat={(chat) => { onSelectUser(chat); setShowNewGroup(false); }}
+          onSelectChat={(chat) => {
+            onSelectUser(chat);
+            setShowNewGroup(false);
+          }}
         />
       )}
     </div>

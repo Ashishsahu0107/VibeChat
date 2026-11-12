@@ -7,7 +7,14 @@ import useChatStore from "../../../store/useChatStore";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 const BG_COLORS = [
-  "#FF5733", "#33FF57", "#3357FF", "#F1C40F", "#9B59B6", "#1ABC9C", "#34495E", "#E67E22"
+  "#1e1b4b", // deep indigo
+  "#0f172a", // deep slate
+  "#082f49", // deep ocean cyan
+  "#2e1065", // deep violet
+  "#14532d", // deep emerald
+  "#701a75", // deep fuchsia
+  "#831843", // deep rose
+  "#18181b", // dark neutral
 ];
 
 const CreateStatusModal = ({ type: initialType, onClose }) => {
@@ -17,7 +24,7 @@ const CreateStatusModal = ({ type: initialType, onClose }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const isSubmittingRef = useRef(false);
   const { createStatus, isCreating } = useStatusStore();
   const { uploadAttachment } = useChatStore.getState();
@@ -68,7 +75,11 @@ const CreateStatusModal = ({ type: initialType, onClose }) => {
 
     try {
       if (type === "text") {
-        await createStatus({ type: "text", content: content.trim(), background });
+        await createStatus({
+          type: "text",
+          content: content.trim(),
+          background,
+        });
       } else {
         // Upload media first
         const uploaded = await uploadAttachment(selectedFile);
@@ -77,7 +88,9 @@ const CreateStatusModal = ({ type: initialType, onClose }) => {
       onClose();
     } catch (err) {
       console.error("Error creating status:", err);
-      toast.error(err.response?.data?.message || err.message || "Failed to post status");
+      toast.error(
+        err.response?.data?.message || err.message || "Failed to post status",
+      );
     } finally {
       isSubmittingRef.current = false;
       setIsSubmitting(false);
@@ -87,37 +100,53 @@ const CreateStatusModal = ({ type: initialType, onClose }) => {
   const isBusy = isSubmitting || isCreating;
 
   return (
-    <div className="fixed inset-0 z-[300] bg-black/90 flex flex-col">
+    <div className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-2xl flex flex-col animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 text-white z-10 bg-gradient-to-b from-black/50 to-transparent">
-        <button 
-          onClick={isBusy ? undefined : onClose} 
+      <div className="flex items-center justify-between p-4 sm:p-6 text-white z-10 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+        <button
+          onClick={isBusy ? undefined : onClose}
           disabled={isBusy}
-          className="p-2 hover:bg-white/20 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="p-2.5 glass-panel rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <FiX size={24} />
+          <FiX size={22} />
         </button>
-        <div className="flex items-center gap-4">
-          <button 
+
+        {/* Mode Selector */}
+        <div className="flex items-center gap-2 p-1 rounded-full glass-panel border border-white/10 bg-white/5">
+          <button
             disabled={isBusy}
-            onClick={() => { setType("text"); setPreview(null); setSelectedFile(null); }} 
-            className={`p-2 rounded-full ${type === "text" ? "bg-white/30" : "hover:bg-white/20"} disabled:opacity-40 disabled:cursor-not-allowed`}
+            onClick={() => {
+              setType("text");
+              setPreview(null);
+              setSelectedFile(null);
+            }}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              type === "text"
+                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25"
+                : "text-white/60 hover:text-white hover:bg-white/10"
+            } disabled:opacity-40 disabled:cursor-not-allowed`}
           >
-            <FiType size={20} />
+            <FiType size={15} />
+            <span>Text</span>
           </button>
-          <button 
+          <button
             disabled={isBusy}
-            onClick={() => fileInputRef.current?.click()} 
-            className={`p-2 rounded-full ${type !== "text" ? "bg-white/30" : "hover:bg-white/20"} disabled:opacity-40 disabled:cursor-not-allowed`}
+            onClick={() => fileInputRef.current?.click()}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              type !== "text"
+                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-purple-500/25"
+                : "text-white/60 hover:text-white hover:bg-white/10"
+            } disabled:opacity-40 disabled:cursor-not-allowed`}
           >
-            <FiImage size={20} />
+            <FiImage size={15} />
+            <span>Media</span>
           </button>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            hidden 
-            accept="image/*,video/*" 
-            onChange={handleFile} 
+          <input
+            type="file"
+            ref={fileInputRef}
+            hidden
+            accept="image/*,video/*"
+            onChange={handleFile}
             disabled={isBusy}
           />
         </div>
@@ -126,27 +155,32 @@ const CreateStatusModal = ({ type: initialType, onClose }) => {
       {/* Main Area */}
       <div className="flex-1 flex items-center justify-center relative overflow-hidden px-4">
         {type === "text" ? (
-          <div 
-            className="w-full h-full max-w-md mx-auto flex flex-col justify-center items-center transition-colors duration-300"
+          <div
+            className="w-full h-full max-w-xl mx-auto flex flex-col justify-center items-center rounded-3xl p-8 transition-colors duration-500 relative border border-white/10 shadow-2xl"
             style={{ backgroundColor: background }}
           >
             <textarea
               autoFocus
-              placeholder="Type a status"
+              placeholder="What's on your mind?"
               disabled={isBusy}
-              className="w-full bg-transparent text-white text-center text-3xl font-semibold outline-none resize-none px-4 disabled:opacity-60"
+              className="w-full bg-transparent text-white placeholder-white/40 text-center text-3xl sm:text-4xl font-bold outline-none resize-none px-4 disabled:opacity-60 leading-relaxed"
               rows={5}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              style={{ textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
+              style={{ textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}
             />
-            {/* Color Picker */}
-            <div className="absolute top-20 right-4 flex flex-col gap-2">
-              {BG_COLORS.map(c => (
-                <button 
-                  key={c} 
+
+            {/* Color Palette Picker */}
+            <div className="absolute bottom-6 flex items-center gap-2.5 p-2 rounded-full glass-panel border border-white/15 bg-black/30 backdrop-blur-md">
+              {BG_COLORS.map((c) => (
+                <button
+                  key={c}
                   disabled={isBusy}
-                  className={`w-8 h-8 rounded-full border-2 ${background === c ? "border-white" : "border-transparent"} disabled:opacity-50`}
+                  className={`w-7 h-7 rounded-full border-2 transition-all ${
+                    background === c
+                      ? "border-cyan-400 scale-110 shadow-lg shadow-cyan-400/50"
+                      : "border-white/30 hover:border-white/70"
+                  } disabled:opacity-50`}
                   style={{ backgroundColor: c }}
                   onClick={() => setBackground(c)}
                 />
@@ -154,24 +188,39 @@ const CreateStatusModal = ({ type: initialType, onClose }) => {
             </div>
           </div>
         ) : (
-          <div className="w-full h-full max-w-lg mx-auto flex items-center justify-center">
+          <div className="w-full h-full max-w-2xl mx-auto flex items-center justify-center">
             {preview ? (
               type === "video" ? (
-                <video src={preview} controls className="max-h-full max-w-full rounded-lg object-contain" />
+                <video
+                  src={preview}
+                  controls
+                  className="max-h-[75vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/15"
+                />
               ) : (
-                <img src={preview} alt="Preview" className="max-h-full max-w-full rounded-lg object-contain" />
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="max-h-[75vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/15"
+                />
               )
             ) : (
-              <div className="text-white/50 text-center">
-                <FiImage size={48} className="mx-auto mb-4 opacity-50" />
-                <p>Select an image or video to share</p>
-                <p className="text-xs text-white/40 mt-1">Maximum file size: 5 MB</p>
-                <button 
-                  onClick={() => fileInputRef.current?.click()} 
+              <div className="glass-card p-10 rounded-3xl text-center max-w-md w-full border border-white/15">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mx-auto mb-4">
+                  <FiImage size={32} />
+                </div>
+                <h4 className="text-lg font-bold text-white mb-1">Upload Status Media</h4>
+                <p className="text-sm text-white/50 mb-1">
+                  Select a photo or short video to share with friends
+                </p>
+                <p className="text-xs text-white/30 mb-6">
+                  Maximum file size: 5 MB
+                </p>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
                   disabled={isBusy}
-                  className="mt-4 btn btn-primary disabled:opacity-50"
+                  className="btn-glow px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 via-cyan-500 to-purple-600 disabled:opacity-50"
                 >
-                  Choose File
+                  Choose Media
                 </button>
               </div>
             )}
@@ -180,20 +229,25 @@ const CreateStatusModal = ({ type: initialType, onClose }) => {
       </div>
 
       {/* Footer / Send Button */}
-      {((type === "text" && content.trim()) || (type !== "text" && selectedFile)) && (
-        <div className="absolute bottom-8 right-8 z-10 flex items-center gap-3">
+      {((type === "text" && content.trim()) ||
+        (type !== "text" && selectedFile)) && (
+        <div className="absolute bottom-8 right-8 z-20 flex items-center gap-3">
           {isBusy && (
-            <span className="text-white text-sm bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-md animate-pulse">
-              {type === "text" ? "Posting..." : "Uploading & Posting..."}
+            <span className="text-white text-xs font-semibold glass-panel px-4 py-2 rounded-full border border-white/15 animate-pulse">
+              {type === "text" ? "Sharing..." : "Uploading & Sharing..."}
             </span>
           )}
-          <button 
+          <button
             type="button"
-            onClick={handlePost} 
+            onClick={handlePost}
             disabled={isBusy}
-            className="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="w-14 h-14 rounded-full flex items-center justify-center text-white bg-gradient-to-tr from-blue-600 via-cyan-500 to-purple-600 shadow-xl shadow-cyan-500/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            {isBusy ? <span className="loading loading-spinner" /> : <FiSend size={24} className="ml-1" />}
+            {isBusy ? (
+              <span className="loading loading-spinner" />
+            ) : (
+              <FiSend size={22} className="ml-0.5" />
+            )}
           </button>
         </div>
       )}

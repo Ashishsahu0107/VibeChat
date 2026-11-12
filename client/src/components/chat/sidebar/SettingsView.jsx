@@ -1,5 +1,5 @@
-import React from 'react';
-import Settings from '../../../pages/Settings';
+import React from "react";
+import Settings from "../../../pages/Settings";
 
 // Render the full Settings page inside the sidebar
 const SettingsView = () => {

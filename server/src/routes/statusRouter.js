@@ -16,4 +16,4 @@ router.get("/", getStatuses);
 router.post("/:statusId/view", viewStatus);
 router.delete("/:statusId", deleteStatus);
 
-export default router;  
+export default router;

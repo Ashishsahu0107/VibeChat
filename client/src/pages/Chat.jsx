@@ -65,42 +65,61 @@ const Chat = () => {
   };
 
   return (
-    <div className="h-screen h-[100dvh] flex bg-base-200 overflow-hidden">
-      {/* ── Desktop Left Icon Nav ───────────────────────────────────────────── */}
-      <div className="hidden md:flex flex-col items-center py-4 bg-base-100 border-r border-base-300 w-[72px] shrink-0 justify-between">
-        <div className="flex flex-col gap-2 w-full items-center">
-          {/* Profile avatar */}
-          <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/20 mb-2">
-            <img
-              src={authUser?.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.fullName || 'U')}&background=7c3aed&color=fff`}
-              alt={authUser?.fullName}
-              className="w-full h-full object-cover"
-            />
+    <div className="h-screen h-[100dvh] flex bg-[#07090e] overflow-hidden relative font-sans text-slate-100">
+      {/* ── Desktop Left Icon Rail ───────────────────────────────────────────── */}
+      <div className="hidden md:flex flex-col items-center py-5 bg-[#0a0f1d]/85 backdrop-blur-2xl border-r border-white/10 w-[74px] shrink-0 justify-between z-20 shadow-xl shadow-black/40">
+        <div className="flex flex-col gap-3 w-full items-center">
+          {/* Profile avatar with glowing ring */}
+          <div className="w-11 h-11 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-500 shadow-lg shadow-cyan-500/20 mb-3 cursor-pointer hover:scale-105 transition-transform" onClick={() => handleTabSwitch('settings')}>
+            <div className="w-full h-full rounded-full overflow-hidden bg-slate-900">
+              <img
+                src={authUser?.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.fullName || 'U')}&background=7c3aed&color=fff`}
+                alt={authUser?.fullName}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              title={item.label}
-              onClick={() => handleTabSwitch(item.id)}
-              className={`w-10 h-10 flex items-center justify-center rounded-xl transition-colors ${
-                activeTab === item.id
-                  ? 'bg-primary text-primary-content shadow-md shadow-primary/30'
-                  : 'text-base-content/60 hover:bg-base-200 hover:text-base-content'
-              }`}
-            >
-              {item.icon}
-            </button>
-          ))}
+
+          {/* Navigation Items */}
+          <div className="flex flex-col gap-2 w-full items-center">
+            {NAV_ITEMS.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  title={item.label}
+                  onClick={() => handleTabSwitch(item.id)}
+                  className={`w-11 h-11 flex items-center justify-center rounded-2xl transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? 'bg-gradient-to-tr from-cyan-500 via-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 border border-white/25 scale-105'
+                      : 'text-slate-400 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  {item.icon}
+                </button>
+              );
+            })}
+          </div>
         </div>
+
         {/* Connection indicator */}
-        <div className={`w-2 h-2 rounded-full mb-2 ${socketConnected ? 'bg-success' : 'bg-error'}`} title={socketConnected ? 'Connected' : 'Disconnected'} />
+        <div className="flex flex-col items-center gap-1.5 pb-2">
+          <div 
+            className={`w-2.5 h-2.5 rounded-full transition-all ${
+              socketConnected 
+                ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]' 
+                : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)] animate-pulse'
+            }`} 
+            title={socketConnected ? 'Connected to live network' : 'Disconnected / Reconnecting'} 
+          />
+        </div>
       </div>
 
       {/* ── Main Layout ─────────────────────────────────────────────────────── */}
-      <div className={`flex flex-1 h-full overflow-hidden ${selectedChat ? 'pb-0' : 'pb-[4.5rem]'} md:pb-0`}>
+      <div className={`flex flex-1 h-full overflow-hidden ${selectedChat ? 'pb-0' : 'pb-[4.5rem]'} md:pb-0 relative z-10`}>
         {/* Sidebar */}
         <div
-          className={`shrink-0 border-r border-base-300 transition-all duration-200 md:w-[320px] lg:w-[360px] xl:w-[400px] ${
+          className={`shrink-0 border-r border-white/10 transition-all duration-200 md:w-[320px] lg:w-[360px] xl:w-[400px] bg-[#0c1324]/80 backdrop-blur-2xl ${
             selectedChat ? 'hidden md:block' : 'w-full block'
           }`}
         >
@@ -109,7 +128,7 @@ const Chat = () => {
 
         {/* Chat Window */}
         <div
-          className={`flex-1 h-full transition-all duration-200 ${
+          className={`flex-1 h-full transition-all duration-200 bg-[#07090e]/70 backdrop-blur-md ${
             selectedChat ? 'flex flex-col' : 'hidden md:flex flex-col'
           }`}
         >
@@ -119,44 +138,58 @@ const Chat = () => {
               onBack={handleBack}
             />
           ) : (
-            <div className="hidden md:flex flex-col items-center justify-center h-full bg-base-200/50 select-none">
-              <div className="w-28 h-28 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                <FiMessageSquare size={56} className="text-primary/30" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2 text-base-content/60">VibeChat Web</h2>
-              <p className="text-sm text-base-content/40 max-w-xs text-center">
-                Select a conversation from the left to start messaging,
-                or click <strong>+</strong> to start a new chat.
-              </p>
-              {!socketConnected && (
-                <div className="mt-6 flex items-center gap-2 bg-warning/10 text-warning px-4 py-2 rounded-full text-sm">
-                  <div className="w-2 h-2 bg-warning rounded-full animate-pulse" />
-                  Connecting…
+            <div className="hidden md:flex flex-col items-center justify-center h-full p-8 select-none relative overflow-hidden text-center">
+              {/* Center glow aura */}
+              <div className="w-80 h-80 rounded-full bg-gradient-to-tr from-cyan-500/15 via-blue-600/10 to-purple-600/15 blur-[80px] pointer-events-none absolute" />
+
+              <div className="relative z-10 glass-card p-10 max-w-md border border-white/15 shadow-2xl shadow-blue-950/40">
+                <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-cyan-500/20 via-blue-600/20 to-purple-600/20 border border-white/15 flex items-center justify-center mb-6 mx-auto text-cyan-400 shadow-xl shadow-cyan-500/15">
+                  <FiMessageSquare size={36} className="drop-shadow" />
                 </div>
-              )}
+                <h2 className="text-2xl font-bold text-white mb-2">VibeChat Workspace</h2>
+                <p className="text-sm text-slate-300/80 leading-relaxed max-w-sm mx-auto mb-6">
+                  Select an active conversation from the sidebar or click the <strong className="text-cyan-400 font-semibold">+</strong> button to start a new chat.
+                </p>
+                {!socketConnected ? (
+                  <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-300 border border-amber-500/20 px-4 py-2 rounded-full text-xs font-medium">
+                    <div className="w-2 h-2 bg-amber-400 rounded-full animate-ping" />
+                    Reconnecting to live server…
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-2 bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 px-4 py-1.5 rounded-full text-xs font-medium">
+                    <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
+                    Ready for real-time messaging
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Mobile Bottom Nav ────────────────────────────────────────────────── */}
+      {/* ── Mobile Bottom Navigation ─────────────────────────────────────────── */}
       {!selectedChat && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-base-100/95 backdrop-blur-md border-t border-base-300 z-50">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0a0f1d]/90 backdrop-blur-2xl border-t border-white/10 z-50 shadow-2xl">
           <div className="flex justify-around items-center px-4 py-2 pb-safe">
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleTabSwitch(item.id)}
-                className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-colors ${
-                  activeTab === item.id
-                    ? 'text-primary'
-                    : 'text-base-content/50'
-                }`}
-              >
-                {item.icon}
-                <span className="text-[10px] font-medium">{item.label}</span>
-              </button>
-            ))}
+            {NAV_ITEMS.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleTabSwitch(item.id)}
+                  className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition-all cursor-pointer ${
+                    isActive
+                      ? 'text-cyan-400 font-semibold scale-105'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <div className={isActive ? 'drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]' : ''}>
+                    {item.icon}
+                  </div>
+                  <span className="text-[10px] font-medium tracking-tight">{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

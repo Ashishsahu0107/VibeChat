@@ -6,12 +6,10 @@ import { getIo } from "../socket/socket.js";
 
 // ── Helper ──────────────────────────────────────────────────────────────────
 const populateMessage = (msg) =>
-  msg
-    .populate("sender", "fullName profilePic email")
-    .populate({
-      path: "replyTo",
-      populate: { path: "sender", select: "fullName profilePic" },
-    });
+  msg.populate("sender", "fullName profilePic email").populate({
+    path: "replyTo",
+    populate: { path: "sender", select: "fullName profilePic" },
+  });
 
 // ── Send Message ─────────────────────────────────────────────────────────────
 export const sendMessage = async (req, res) => {
@@ -67,7 +65,7 @@ export const sendMessage = async (req, res) => {
       },
       {
         arrayFilters: [{ "elem.userId": { $ne: req.user._id } }],
-      }
+      },
     );
 
     // Emit via socket to all room members
@@ -93,7 +91,7 @@ export const allMessages = async (req, res) => {
     }
 
     const userState = chat.userStates?.find(
-      (s) => s.userId && s.userId.toString() === req.user._id.toString()
+      (s) => s.userId && s.userId.toString() === req.user._id.toString(),
     );
     const clearedAt = userState?.clearedAt || null;
 
@@ -129,7 +127,8 @@ export const allMessages = async (req, res) => {
 export const editMessage = async (req, res) => {
   const { messageId } = req.params;
   const { content } = req.body;
-  if (!content?.trim()) return res.status(400).json({ message: "Content required" });
+  if (!content?.trim())
+    return res.status(400).json({ message: "Content required" });
 
   try {
     const msg = await Message.findById(messageId);
@@ -182,13 +181,17 @@ export const deleteMessage = async (req, res) => {
         });
       } catch (_) {}
 
-      return res.status(200).json({ message: "Message deleted for everyone", messageId });
+      return res
+        .status(200)
+        .json({ message: "Message deleted for everyone", messageId });
     } else {
       if (!msg.deletedFor.includes(req.user._id)) {
         msg.deletedFor.push(req.user._id);
         await msg.save();
       }
-      return res.status(200).json({ message: "Message deleted for you", messageId });
+      return res
+        .status(200)
+        .json({ message: "Message deleted for you", messageId });
     }
   } catch (error) {
     console.error("Error in deleteMessage:", error.message);
@@ -207,7 +210,7 @@ export const reactToMessage = async (req, res) => {
 
     const userId = req.user._id.toString();
     const existingIdx = msg.reactions.findIndex(
-      (r) => r.userId.toString() === userId
+      (r) => r.userId.toString() === userId,
     );
 
     if (existingIdx > -1) {
@@ -224,7 +227,11 @@ export const reactToMessage = async (req, res) => {
 
     await msg.save();
 
-    const reactionData = { messageId, chatId: msg.chatId, reactions: msg.reactions };
+    const reactionData = {
+      messageId,
+      chatId: msg.chatId,
+      reactions: msg.reactions,
+    };
 
     try {
       const io = getIo();
@@ -247,10 +254,14 @@ export const starMessage = async (req, res) => {
     if (!msg) return res.status(404).json({ message: "Message not found" });
 
     const userId = req.user._id;
-    const isStarred = msg.starredBy.some((id) => id.toString() === userId.toString());
+    const isStarred = msg.starredBy.some(
+      (id) => id.toString() === userId.toString(),
+    );
 
     if (isStarred) {
-      msg.starredBy = msg.starredBy.filter((id) => id.toString() !== userId.toString());
+      msg.starredBy = msg.starredBy.filter(
+        (id) => id.toString() !== userId.toString(),
+      );
     } else {
       msg.starredBy.push(userId);
     }
@@ -271,7 +282,7 @@ export const markAsRead = async (req, res) => {
     // Reset unread count for this user in this chat
     await Chat.updateOne(
       { _id: chatId, "userStates.userId": req.user._id },
-      { $set: { "userStates.$.unreadCount": 0 } }
+      { $set: { "userStates.$.unreadCount": 0 } },
     );
 
     // Mark all unread messages in this chat as read
@@ -284,7 +295,7 @@ export const markAsRead = async (req, res) => {
       {
         $push: { readBy: { userId: req.user._id, at: new Date() } },
         $set: { status: "read" },
-      }
+      },
     );
 
     try {
@@ -310,9 +321,12 @@ export const uploadAttachment = async (req, res) => {
     }
 
     const mimeType = req.file.mimetype || "";
-    const isImageOrVideo = mimeType.startsWith("image/") || mimeType.startsWith("video/");
+    const isImageOrVideo =
+      mimeType.startsWith("image/") || mimeType.startsWith("video/");
     if (isImageOrVideo && req.file.size > 5 * 1024 * 1024) {
-      return res.status(400).json({ error: "Image and video files must not exceed 5 MB" });
+      return res
+        .status(400)
+        .json({ error: "Image and video files must not exceed 5 MB" });
     }
 
     let resourceType = "auto";
@@ -342,7 +356,7 @@ export const uploadAttachment = async (req, res) => {
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
-        }
+        },
       );
       stream.end(req.file.buffer);
     });

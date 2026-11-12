@@ -5,13 +5,13 @@ const chatSchema = new mongoose.Schema(
     isGroupChat: { type: Boolean, default: false },
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     latestMessage: { type: mongoose.Schema.Types.ObjectId, ref: "Message" },
-    
+
     // Group specifics
     groupName: { type: String, trim: true },
     groupDescription: { type: String, default: "" },
     groupAvatar: { type: String, default: "" },
     groupAdmins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    
+
     // Per-user chat state (archived, muted, unread, etc)
     userStates: [
       {
@@ -20,11 +20,11 @@ const chatSchema = new mongoose.Schema(
         isPinned: { type: Boolean, default: false },
         isMuted: { type: Boolean, default: false },
         isArchived: { type: Boolean, default: false },
-        clearedAt: { type: Date, default: null } // To hide messages before this date for this user
-      }
-    ]
+        clearedAt: { type: Date, default: null }, // To hide messages before this date for this user
+      },
+    ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 chatSchema.index({ users: 1 });

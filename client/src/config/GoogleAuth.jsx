@@ -48,7 +48,7 @@ export const useGoogleAuth = () => {
         script.onerror = (error) => {
           console.error(
             "Failed to load Google Identity Services script:",
-            error
+            error,
           );
           setError("Failed to load Google Identity Services");
           setIsLoading(false);
@@ -157,7 +157,6 @@ export const useGoogleAuth = () => {
           setError("Could not trigger Google sign-in");
           onFailure?.({ message: "Could not trigger Google sign-in" });
         }
-
       }, 100);
     } catch (error) {
       console.error("Google sign-in error:", error);

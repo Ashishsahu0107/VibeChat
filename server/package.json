@@ -6,14 +6,16 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "build": "npm install --prefix ../client && npm run build --prefix ../client"
+    "build": "npm install --prefix ../client && npm run build --prefix ../client",
+    "format": "prettier --write \"src/**/*.{js,json,css}\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "prettier": "^3.10.1"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

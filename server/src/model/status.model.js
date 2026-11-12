@@ -32,7 +32,7 @@ const statusSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Status = mongoose.model("Status", statusSchema);

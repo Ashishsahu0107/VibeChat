@@ -54,11 +54,19 @@ export const initSocket = (server) => {
 
     // ── Message Delivered / Read ─────────────────────────────────────────────
     socket.on("message-delivered", ({ messageId, chatId, userId }) => {
-      socket.to(chatId).emit("message-status-updated", { messageId, status: "delivered", userId });
+      socket
+        .to(chatId)
+        .emit("message-status-updated", {
+          messageId,
+          status: "delivered",
+          userId,
+        });
     });
 
     socket.on("message-read", ({ messageId, chatId, userId }) => {
-      socket.to(chatId).emit("message-status-updated", { messageId, status: "read", userId });
+      socket
+        .to(chatId)
+        .emit("message-status-updated", { messageId, status: "read", userId });
     });
 
     // ── Bulk Read ────────────────────────────────────────────────────────────
@@ -67,12 +75,21 @@ export const initSocket = (server) => {
     });
 
     // ── WebRTC Call Signaling ────────────────────────────────────────────────
-    socket.on("call-user", ({ userToCall, signalData, from, name, isVideoCall, chatId }) => {
-      const socketId = userSocketMap[userToCall];
-      if (socketId) {
-        io.to(socketId).emit("call-incoming", { signal: signalData, from, name, isVideoCall, chatId });
-      }
-    });
+    socket.on(
+      "call-user",
+      ({ userToCall, signalData, from, name, isVideoCall, chatId }) => {
+        const socketId = userSocketMap[userToCall];
+        if (socketId) {
+          io.to(socketId).emit("call-incoming", {
+            signal: signalData,
+            from,
+            name,
+            isVideoCall,
+            chatId,
+          });
+        }
+      },
+    );
 
     socket.on("answer-call", (data) => {
       const socketId = userSocketMap[data.to];
@@ -100,7 +117,10 @@ export const initSocket = (server) => {
       if (userId && userSocketMap[userId] === socket.id) {
         delete userSocketMap[userId];
         try {
-          await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: new Date() });
+          await User.findByIdAndUpdate(userId, {
+            isOnline: false,
+            lastSeen: new Date(),
+          });
         } catch (_) {}
         io.emit("getOnlineUsers", Object.keys(userSocketMap));
         // Notify all rooms this user was in

@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { FiMail, FiLock, FiKey, FiEye, FiEyeOff, FiX, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
+import {
+  FiMail,
+  FiLock,
+  FiKey,
+  FiEye,
+  FiEyeOff,
+  FiX,
+  FiArrowLeft,
+  FiCheckCircle,
+} from "react-icons/fi";
 import toast from "react-hot-toast";
 import api from "../config/api";
 
@@ -77,7 +86,9 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
       setResendCooldown(60);
       setStep(2);
     } catch (error) {
-      const msg = error.response?.data?.error || "Failed to send reset code. Please check your network.";
+      const msg =
+        error.response?.data?.error ||
+        "Failed to send reset code. Please check your network.";
       setErrorMessage(msg);
       toast.error(msg);
     } finally {
@@ -147,19 +158,22 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="bg-base-100 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-base-300 p-6 sm:p-8 relative animate-in zoom-in-95 duration-200"
+        className="glass-card w-full max-w-md overflow-hidden border border-white/20 p-6 sm:p-8 relative shadow-2xl shadow-blue-950/60 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Top Highlight Line */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
+
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-base-content/40 hover:text-base-content hover:bg-base-200 rounded-full transition-colors"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-full transition-colors cursor-pointer"
           aria-label="Close"
         >
           <FiX size={18} />
@@ -168,48 +182,47 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
         {/* STEP 1: ENTER EMAIL */}
         {step === 1 && (
           <div>
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 border border-primary/20 shadow-inner">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 text-cyan-400 flex items-center justify-center mx-auto mb-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
               <FiKey size={26} />
             </div>
 
-            <h3 className="text-2xl font-bold text-center text-base-content mb-2">
+            <h3 className="text-2xl font-bold text-center text-white mb-2">
               Forgot Password?
             </h3>
-            <p className="text-sm text-center text-base-content/70 mb-6 leading-relaxed">
-              Enter your registered email address and we'll send you a 6-digit code to reset your password.
+            <p className="text-sm text-center text-slate-300/80 mb-6 leading-relaxed">
+              Enter your registered email address and we'll send you a 6-digit
+              code to reset your password.
             </p>
 
             {errorMessage && (
-              <div className="bg-error/10 border border-error/20 rounded-2xl p-3 mb-4 text-xs text-error font-medium text-center leading-relaxed">
+              <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3 mb-4 text-xs text-rose-300 font-medium text-center leading-relaxed">
                 {errorMessage}
               </div>
             )}
 
             <form onSubmit={handleSendOtp} className="space-y-4">
-              <div className="form-control w-full">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs uppercase tracking-wider text-base-content/70">
-                    Email Address
-                  </span>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">
+                  Email Address
                 </label>
-                <label
-                  className={`input input-bordered flex items-center gap-2 transition-all ${
-                    email && !validateEmail(email) ? "border-error" : "border-base-300"
-                  } focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent`}
+                <div
+                  className={`glass-input flex items-center gap-3 px-3.5 py-3 ${
+                    email && !validateEmail(email) ? "border-rose-500/70" : ""
+                  }`}
                 >
-                  <FiMail className="text-base-content/50" />
+                  <FiMail className="text-slate-400 shrink-0" size={17} />
                   <input
                     type="email"
-                    className="grow"
+                    className="grow bg-transparent text-sm text-white focus:outline-none placeholder:text-slate-500"
                     placeholder="name@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     autoFocus
                   />
-                </label>
+                </div>
                 {email && !validateEmail(email) && (
-                  <span className="text-xs text-error mt-1 ml-1">
+                  <span className="text-xs text-rose-400 block pt-0.5">
                     Please enter a valid email address
                   </span>
                 )}
@@ -218,10 +231,10 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn btn-primary w-full text-base font-semibold rounded-xl shadow-lg shadow-primary/25 mt-2"
+                className="btn-glow w-full py-3.5 text-sm sm:text-base font-semibold flex items-center justify-center gap-2 mt-3 shadow-xl"
               >
                 {loading ? (
-                  <span className="loading loading-spinner loading-sm"></span>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   "Send Verification Code"
                 )}
@@ -230,7 +243,7 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="btn btn-ghost border border-base-300 w-full text-sm rounded-xl font-medium"
+                className="btn-glass w-full py-3 text-sm font-medium mt-1"
               >
                 Back to Login
               </button>
@@ -243,33 +256,38 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
           <div>
             <button
               onClick={() => setStep(1)}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-base-content/60 hover:text-base-content mb-4 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-white mb-4 transition-colors cursor-pointer"
             >
               <FiArrowLeft size={14} /> Change email
             </button>
 
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 border border-primary/20 shadow-inner">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-500/20 to-blue-500/20 text-purple-300 flex items-center justify-center mx-auto mb-4 border border-purple-500/30 shadow-lg shadow-purple-500/10">
               <FiLock size={26} />
             </div>
 
-            <h3 className="text-2xl font-bold text-center text-base-content mb-1">
+            <h3 className="text-2xl font-bold text-center text-white mb-1">
               Reset Password
             </h3>
-            <p className="text-xs text-center text-base-content/70 mb-4 px-2">
-              Code sent to <span className="font-semibold text-base-content">{email}</span>
+            <p className="text-xs text-center text-slate-300/70 mb-4 px-2">
+              Code sent to{" "}
+              <span className="font-semibold text-cyan-300">{email}</span>
             </p>
 
             {/* Dev Mode OTP Banner (if simulated) */}
             {devOtp && (
-              <div className="bg-primary/10 border border-primary/20 rounded-2xl p-3 mb-4 flex items-center justify-between text-xs">
+              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl p-3 mb-4 flex items-center justify-between text-xs">
                 <div>
-                  <span className="font-semibold text-primary block">Test Code (Demo):</span>
-                  <span className="text-sm font-mono tracking-widest font-bold text-base-content">{devOtp}</span>
+                  <span className="font-semibold text-cyan-300 block">
+                    Test Code (Demo):
+                  </span>
+                  <span className="text-sm font-mono tracking-widest font-bold text-white">
+                    {devOtp}
+                  </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setOtp(devOtp)}
-                  className="btn btn-xs btn-primary rounded-lg"
+                  className="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-semibold border border-cyan-500/30 transition-colors"
                 >
                   Auto-Fill
                 </button>
@@ -278,47 +296,49 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
 
             <form onSubmit={handleResetPassword} className="space-y-4">
               {/* 6-Digit OTP */}
-              <div className="form-control w-full">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="label-text font-semibold text-xs uppercase tracking-wider text-base-content/70">
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
                     6-Digit Code
                   </span>
                   <button
                     type="button"
                     onClick={handleResendOtp}
                     disabled={resendCooldown > 0 || loading}
-                    className="text-xs text-primary hover:underline font-medium disabled:opacity-50"
+                    className="text-xs text-cyan-400 hover:underline font-medium disabled:opacity-50 cursor-pointer"
                   >
-                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code"}
+                    {resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : "Resend Code"}
                   </button>
                 </div>
-                <label className="input input-bordered border-base-300 flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent">
-                  <FiKey className="text-base-content/50" />
+                <div className="glass-input flex items-center gap-3 px-3.5 py-3">
+                  <FiKey className="text-slate-400 shrink-0" size={17} />
                   <input
                     type="text"
                     maxLength={6}
-                    className="grow font-mono tracking-widest text-center text-lg font-bold"
+                    className="grow font-mono tracking-widest text-center text-lg font-bold bg-transparent text-white focus:outline-none"
                     placeholder="123456"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    onChange={(e) =>
+                      setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                    }
                     required
                     autoFocus
                   />
-                </label>
+                </div>
               </div>
 
               {/* New Password */}
-              <div className="form-control w-full">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs uppercase tracking-wider text-base-content/70">
-                    New Password
-                  </span>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">
+                  New Password
                 </label>
-                <label className="input input-bordered border-base-300 flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent">
-                  <FiLock className="text-base-content/50" />
+                <div className="glass-input flex items-center gap-3 px-3.5 py-3">
+                  <FiLock className="text-slate-400 shrink-0" size={17} />
                   <input
                     type={showPassword ? "text" : "password"}
-                    className="grow"
+                    className="grow bg-transparent text-sm text-white focus:outline-none placeholder:text-slate-500"
                     placeholder="At least 6 characters"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -328,34 +348,32 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-base-content/50 hover:text-base-content"
+                    className="text-slate-400 hover:text-white cursor-pointer"
                   >
                     {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
                   </button>
-                </label>
+                </div>
               </div>
 
               {/* Confirm Password */}
-              <div className="form-control w-full">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs uppercase tracking-wider text-base-content/70">
-                    Confirm New Password
-                  </span>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">
+                  Confirm New Password
                 </label>
-                <label className="input input-bordered border-base-300 flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent">
-                  <FiLock className="text-base-content/50" />
+                <div className="glass-input flex items-center gap-3 px-3.5 py-3">
+                  <FiLock className="text-slate-400 shrink-0" size={17} />
                   <input
                     type={showPassword ? "text" : "password"}
-                    className="grow"
+                    className="grow bg-transparent text-sm text-white focus:outline-none placeholder:text-slate-500"
                     placeholder="Repeat new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     minLength={6}
                   />
-                </label>
+                </div>
                 {confirmPassword && newPassword !== confirmPassword && (
-                  <span className="text-xs text-error mt-1 ml-1">
+                  <span className="text-xs text-rose-400 block pt-0.5">
                     Passwords do not match
                   </span>
                 )}
@@ -364,10 +382,10 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn btn-primary w-full text-base font-semibold rounded-xl shadow-lg shadow-primary/25 mt-2"
+                className="btn-glow w-full py-3.5 text-sm sm:text-base font-semibold flex items-center justify-center gap-2 mt-3 shadow-xl"
               >
                 {loading ? (
-                  <span className="loading loading-spinner loading-sm"></span>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   "Reset Password"
                 )}
@@ -379,21 +397,22 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
         {/* STEP 3: SUCCESS CONFIRMATION */}
         {step === 3 && (
           <div className="text-center py-4">
-            <div className="w-16 h-16 rounded-full bg-success/10 text-success flex items-center justify-center mx-auto mb-4 border border-success/20 shadow-inner">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-400 flex items-center justify-center mx-auto mb-4 border border-emerald-500/30 shadow-inner">
               <FiCheckCircle size={32} />
             </div>
 
-            <h3 className="text-2xl font-bold text-base-content mb-2">
+            <h3 className="text-2xl font-bold text-white mb-2">
               Password Reset!
             </h3>
-            <p className="text-sm text-base-content/70 mb-6 leading-relaxed">
-              Your password has been changed successfully. You can now log in with your new credentials.
+            <p className="text-sm text-slate-300/80 mb-6 leading-relaxed">
+              Your password has been changed successfully. You can now log in
+              with your new credentials.
             </p>
 
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-primary w-full text-base font-semibold rounded-xl shadow-lg shadow-primary/25"
+              className="btn-glow w-full py-3.5 text-base font-semibold rounded-xl shadow-xl"
             >
               Back to Login
             </button>

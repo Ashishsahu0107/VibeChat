@@ -5,39 +5,245 @@
   themes: all;
 }
 
-/* ── Global Reset & Base ────────────────────────────────────────────────── */
-*, *::before, *::after {
+/* ── Global Reset & Base Typography ────────────────────────────────────────── */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   margin: 0;
   padding: 0;
+  font-family:
+    "Plus Jakarta Sans",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Safe area for mobile (iOS/Android notch) ────────────────────────────── */
+body {
+  background-color: #07090e;
+  color: #f1f5f9;
+  overflow-x: hidden;
+}
+
+/* ── Deep Dark Gradient Foundation ─────────────────────────────────────────── */
+.bg-dark-mesh {
+  background-color: #07090e;
+  background-image:
+    radial-gradient(
+      circle at 12% 15%,
+      rgba(6, 182, 212, 0.12) 0%,
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 88% 18%,
+      rgba(147, 51, 234, 0.14) 0%,
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 50% 85%,
+      rgba(59, 130, 246, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 82% 82%,
+      rgba(6, 182, 212, 0.08) 0%,
+      transparent 40%
+    );
+  background-attachment: fixed;
+}
+
+/* ── Glassmorphism Utility Classes ─────────────────────────────────────────── */
+.glass-panel {
+  background: rgba(13, 19, 33, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 10px 30px -10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+.glass-card {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 20px 40px -15px rgba(0, 0, 0, 0.55),
+    0 0 25px -5px rgba(59, 130, 246, 0.05),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+  border-radius: 1.25rem;
+}
+
+.glass-card-interactive {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 20px 40px -15px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-interactive:hover {
+  background: rgba(18, 28, 51, 0.75);
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow:
+    0 24px 50px -12px rgba(0, 0, 0, 0.65),
+    0 0 30px -5px rgba(6, 182, 212, 0.18),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
+  transform: translateY(-3px);
+}
+
+.glass-input {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-radius: 0.875rem !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+
+.glass-input:focus,
+.glass-input:focus-within {
+  border-color: rgba(56, 189, 248, 0.65) !important;
+  box-shadow:
+    0 0 0 3px rgba(6, 182, 212, 0.22),
+    0 0 20px -2px rgba(59, 130, 246, 0.25),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  outline: none !important;
+}
+
+.glass-input::placeholder {
+  color: rgba(148, 163, 184, 0.55) !important;
+}
+
+/* ── Glowing Gradient Buttons ──────────────────────────────────────────────── */
+.btn-glow {
+  background: linear-gradient(
+    135deg,
+    #06b6d4 0%,
+    #3b82f6 50%,
+    #8b5cf6 100%
+  ) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow:
+    0 4px 20px -2px rgba(59, 130, 246, 0.45),
+    0 2px 10px -2px rgba(139, 92, 246, 0.35),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.3) !important;
+  border-radius: 0.875rem;
+  font-weight: 600;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer;
+}
+
+.btn-glow:hover:not(:disabled) {
+  box-shadow:
+    0 6px 28px 0px rgba(6, 182, 212, 0.6),
+    0 3px 14px 0px rgba(139, 92, 246, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.45) !important;
+  transform: translateY(-1.5px);
+  filter: brightness(1.08);
+}
+
+.btn-glow:active:not(:disabled) {
+  transform: scale(0.97) translateY(0) !important;
+}
+
+.btn-glass {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  color: #f1f5f9 !important;
+  border-radius: 0.875rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1) !important;
+  cursor: pointer;
+}
+
+.btn-glass:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-1px);
+}
+
+.btn-glass:active:not(:disabled) {
+  transform: scale(0.97) !important;
+}
+
+/* ── Gradient Text ─────────────────────────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(
+    135deg,
+    #22d3ee 0%,
+    #38bdf8 25%,
+    #60a5fa 50%,
+    #a78bfa 75%,
+    #c084fc 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-cyan {
+  background: linear-gradient(135deg, #67e8f9 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-purple {
+  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 50%, #f472b6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Safe area for mobile ──────────────────────────────────────────────────── */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 12px);
 }
 
-/* ── Custom Scrollbar ────────────────────────────────────────────────────── */
+/* ── Custom Scrollbar ──────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(var(--bc) / 0.15);
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 99px;
+  backdrop-filter: blur(8px);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(var(--bc) / 0.3);
+  background: rgba(56, 189, 248, 0.35);
 }
 
-/* ── Message bubble animations ───────────────────────────────────────────── */
+/* ── Message bubble animations ─────────────────────────────────────────────── */
 @keyframes messageIn {
   from {
     opacity: 0;
@@ -49,18 +255,22 @@ html, body, #root {
   }
 }
 
-/* Apply to incoming messages */
 [id^="msg-"] {
-  animation: messageIn 0.15s ease-out;
+  animation: messageIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ── Typing Bounce ────────────────────────────────────────────────────────── */
+/* ── Typing Bounce ──────────────────────────────────────────────────────────── */
 @keyframes typingBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
-/* ── Context menu / popover fade in ─────────────────────────────────────── */
+/* ── Context menu / popover fade in ───────────────────────────────────────── */
 @keyframes fadeInDown {
   from {
     opacity: 0;
@@ -72,20 +282,55 @@ html, body, #root {
   }
 }
 
-/* ── Emoji Picker override to match theme ────────────────────────────────── */
-.EmojiPickerReact {
-  border-color: oklch(var(--b3)) !important;
-  background-color: oklch(var(--b1)) !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2) !important;
-  border-radius: 16px !important;
+/* ── Floating Glow Orb Animations ──────────────────────────────────────────── */
+@keyframes orbFloat {
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(25px, -35px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
 }
 
-/* ── Prevent body scroll when modal open ────────────────────────────────── */
+.animate-orb-slow {
+  animation: orbFloat 14s ease-in-out infinite alternate;
+}
+
+.animate-orb-delayed {
+  animation: orbFloat 18s ease-in-out infinite alternate;
+  animation-delay: -6s;
+}
+
+/* ── Emoji Picker override to match dark glass theme ──────────────────────── */
+.EmojiPickerReact {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  border-radius: 20px !important;
+  color-scheme: dark !important;
+}
+
+.EmojiPickerReact .epr-search-container input {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  color: #fff !important;
+}
+
+/* ── Prevent body scroll when modal open ──────────────────────────────────── */
 body.modal-open {
   overflow: hidden;
 }
 
-/* ── Smooth transitions ──────────────────────────────────────────────────── */
+/* ── Smooth transitions ────────────────────────────────────────────────────── */
 .transition-all {
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }

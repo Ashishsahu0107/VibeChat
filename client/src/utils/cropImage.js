@@ -1,9 +1,9 @@
 export const createImage = (url) =>
   new Promise((resolve, reject) => {
     const image = new Image();
-    image.addEventListener('load', () => resolve(image));
-    image.addEventListener('error', (error) => reject(error));
-    image.setAttribute('crossOrigin', 'anonymous');
+    image.addEventListener("load", () => resolve(image));
+    image.addEventListener("error", (error) => reject(error));
+    image.setAttribute("crossOrigin", "anonymous");
     image.src = url;
   });
 
@@ -15,11 +15,11 @@ export default async function getCroppedImg(
   imageSrc,
   pixelCrop,
   rotation = 0,
-  flip = { horizontal: false, vertical: false }
+  flip = { horizontal: false, vertical: false },
 ) {
   const image = await createImage(imageSrc);
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
 
   if (!ctx) {
     return null;
@@ -40,8 +40,8 @@ export default async function getCroppedImg(
   ctx.drawImage(image, 0, 0);
 
   // extracted cropped image
-  const croppedCanvas = document.createElement('canvas');
-  const croppedCtx = croppedCanvas.getContext('2d');
+  const croppedCanvas = document.createElement("canvas");
+  const croppedCtx = croppedCanvas.getContext("2d");
 
   if (!croppedCtx) {
     return null;
@@ -59,14 +59,14 @@ export default async function getCroppedImg(
     0,
     0,
     pixelCrop.width,
-    pixelCrop.height
+    pixelCrop.height,
   );
 
   return new Promise((resolve) => {
     croppedCanvas.toBlob((file) => {
-      if(file) {
-          resolve(new File([file], "profile-pic.jpeg", { type: "image/jpeg" }));
+      if (file) {
+        resolve(new File([file], "profile-pic.jpeg", { type: "image/jpeg" }));
       }
-    }, 'image/jpeg');
+    }, "image/jpeg");
   });
 }

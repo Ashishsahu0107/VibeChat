@@ -91,18 +91,22 @@ export const viewStatus = async (req, res) => {
     }
 
     const hasViewed = status.viewers.some(
-      (v) => v.user.toString() === req.user._id.toString()
+      (v) => v.user.toString() === req.user._id.toString(),
     );
 
     if (!hasViewed) {
       status.viewers.push({ user: req.user._id, viewedAt: new Date() });
       await status.save();
-      
+
       // Emit update to the status owner
       const io = getIo();
       io.to(status.sender.toString()).emit("status-viewed", {
         statusId: status._id,
-        viewer: { _id: req.user._id, fullName: req.user.fullName, profilePic: req.user.profilePic },
+        viewer: {
+          _id: req.user._id,
+          fullName: req.user.fullName,
+          profilePic: req.user.profilePic,
+        },
       });
     }
 
