@@ -48,7 +48,7 @@ export const register = async (req, res) => {
 
     await newUser.save();
 
-    generateToken(newUser._id, res);
+    const token = generateToken(newUser._id, res);
 
     res.status(201).json({
       _id: newUser._id,
@@ -58,6 +58,7 @@ export const register = async (req, res) => {
       phone: newUser.phone,
       about: newUser.about,
       settings: newUser.settings,
+      token,
     });
   } catch (error) {
     console.error("Error in Register controller", error.message);
@@ -92,7 +93,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
-    generateToken(user._id, res);
+    const token = generateToken(user._id, res);
 
     res.status(200).json({
       _id: user._id,
@@ -102,6 +103,7 @@ export const login = async (req, res) => {
       phone: user.phone,
       about: user.about,
       settings: user.settings,
+      token,
     });
   } catch (error) {
     console.error("Error in Login controller", error.message);
@@ -114,8 +116,9 @@ export const logout = (req, res) => {
     res.cookie("jwt", "", {
       maxAge: 0,
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       secure: process.env.NODE_ENV === "production",
+      path: "/",
     });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
@@ -128,7 +131,16 @@ export const checkAuth = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password").lean();
     if (!user) return res.status(401).json({ error: "User not found" });
-    res.status(200).json(user);
+
+    let token = req.cookies?.jwt;
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+    if (!token) {
+      token = generateToken(user._id, res);
+    }
+
+    res.status(200).json({ ...user, token });
   } catch (error) {
     console.error("Error in CheckAuth controller", error.message);
     res.status(500).json({ error: "Internal Server Error" });
@@ -156,7 +168,7 @@ export const GoogleUserLogin = async (req, res) => {
       await user.save();
     }
 
-    generateToken(user._id, res);
+    const token = generateToken(user._id, res);
 
     res.status(200).json({
       _id: user._id,
@@ -166,6 +178,7 @@ export const GoogleUserLogin = async (req, res) => {
       phone: user.phone,
       about: user.about,
       settings: user.settings,
+      token,
     });
   } catch (error) {
     console.error("Error in Google Login", error.message);

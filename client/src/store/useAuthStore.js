@@ -1,17 +1,34 @@
 import { create } from "zustand";
 import api from "../config/api";
 
+const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem("authUser") || sessionStorage.getItem("authUser");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 const useAuthStore = create((set, get) => ({
-  authUser: JSON.parse(sessionStorage.getItem("authUser")) || null,
-  isCheckingAuth: false,
+  authUser: getStoredUser(),
+  isCheckingAuth: true,
   isLoggingIn: false,
   isRegistering: false,
 
   setAuthUser: (user) => {
     if (user) {
+      localStorage.setItem("authUser", JSON.stringify(user));
       sessionStorage.setItem("authUser", JSON.stringify(user));
+      if (user.token) {
+        localStorage.setItem("token", user.token);
+        sessionStorage.setItem("token", user.token);
+      }
     } else {
+      localStorage.removeItem("authUser");
+      localStorage.removeItem("token");
       sessionStorage.removeItem("authUser");
+      sessionStorage.removeItem("token");
     }
     set({ authUser: user });
   },
@@ -20,30 +37,35 @@ const useAuthStore = create((set, get) => ({
     set({ isCheckingAuth: true });
     try {
       const res = await api.get("/auth/check");
-      set({ authUser: res.data, isCheckingAuth: false });
-      sessionStorage.setItem("authUser", JSON.stringify(res.data));
-      return res.data;
-    } catch (_) {
-      set({ authUser: null, isCheckingAuth: false });
-      sessionStorage.removeItem("authUser");
-      return null;
+      const user = res.data;
+      if (user) {
+        get().setAuthUser(user);
+        set({ isCheckingAuth: false });
+        return user;
+      }
+    } catch (err) {
+      // If unauthorized, clear stored user
+      if (err.response?.status === 401) {
+        get().setAuthUser(null);
+      }
+    } finally {
+      set({ isCheckingAuth: false });
     }
+    return null;
   },
 
   logout: async () => {
     try {
       await api.post("/auth/logout");
     } catch (_) {}
-    sessionStorage.removeItem("authUser");
-    set({ authUser: null });
+    get().setAuthUser(null);
   },
 
   updateProfile: async (data) => {
     try {
       const res = await api.put("/users/profile", data);
       const updatedUser = res.data;
-      sessionStorage.setItem("authUser", JSON.stringify(updatedUser));
-      set({ authUser: updatedUser });
+      get().setAuthUser(updatedUser);
       return { success: true, user: updatedUser };
     } catch (error) {
       console.error("Update profile failed:", error);
@@ -58,8 +80,7 @@ const useAuthStore = create((set, get) => ({
     try {
       const res = await api.post("/users/profile/image", formData);
       const updatedUser = res.data;
-      sessionStorage.setItem("authUser", JSON.stringify(updatedUser));
-      set({ authUser: updatedUser });
+      get().setAuthUser(updatedUser);
       return { success: true, user: updatedUser };
     } catch (error) {
       console.error("Upload image failed:", error);
@@ -86,8 +107,7 @@ const useAuthStore = create((set, get) => ({
     try {
       const res = await api.put("/users/profile", { settings });
       const updatedUser = res.data;
-      sessionStorage.setItem("authUser", JSON.stringify(updatedUser));
-      set({ authUser: updatedUser });
+      get().setAuthUser(updatedUser);
       return { success: true };
     } catch (error) {
       return {
@@ -101,8 +121,7 @@ const useAuthStore = create((set, get) => ({
     try {
       const res = await api.post(`/users/block/${userId}`);
       const updatedUser = res.data;
-      sessionStorage.setItem("authUser", JSON.stringify(updatedUser));
-      set({ authUser: updatedUser });
+      get().setAuthUser(updatedUser);
       return { success: true };
     } catch (error) {
       return {
@@ -116,8 +135,7 @@ const useAuthStore = create((set, get) => ({
     try {
       const res = await api.post(`/users/unblock/${userId}`);
       const updatedUser = res.data;
-      sessionStorage.setItem("authUser", JSON.stringify(updatedUser));
-      set({ authUser: updatedUser });
+      get().setAuthUser(updatedUser);
       return { success: true };
     } catch (error) {
       return {

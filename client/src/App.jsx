@@ -48,41 +48,41 @@ const AppLayout = ({ authUser }) => {
           <Route path="/group-chats" element={<GroupChats />} />
           <Route
             path="/settings/*"
-            element={authUser ? <Settings /> : <Navigate to="/login" />}
+            element={authUser ? <Settings /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/profile/*"
-            element={authUser ? <Settings /> : <Navigate to="/login" />}
+            element={authUser ? <Settings /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/chat/*"
-            element={authUser ? <Chat /> : <Navigate to="/login" />}
+            element={authUser ? <Chat /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/status/*"
-            element={authUser ? <Chat /> : <Navigate to="/login" />}
+            element={authUser ? <Chat /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/media-viewer/*"
-            element={authUser ? <Chat /> : <Navigate to="/login" />}
+            element={authUser ? <Chat /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/message/*"
-            element={authUser ? <Chat /> : <Navigate to="/login" />}
+            element={authUser ? <Chat /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/login"
-            element={!authUser ? <Login /> : <Navigate to="/chat" />}
+            element={!authUser ? <Login /> : <Navigate to="/chat" replace />}
           />
           <Route
             path="/register"
-            element={!authUser ? <Register /> : <Navigate to="/chat" />}
+            element={!authUser ? <Register /> : <Navigate to="/chat" replace />}
           />
           <Route
             path="/forgot-password"
-            element={!authUser ? <ForgotPassword /> : <Navigate to="/chat" />}
+            element={!authUser ? <ForgotPassword /> : <Navigate to="/chat" replace />}
           />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
 
@@ -111,8 +111,13 @@ const AppLayout = ({ authUser }) => {
 };
 
 const App = () => {
-  const authUser = useAuthStore((state) => state.authUser);
+  const { authUser, checkAuth } = useAuthStore();
   const chats = useChatStore((state) => state.chats);
+
+  // Validate session on mount
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   // Apply saved theme on mount (default to dark)
   useEffect(() => {

@@ -142,6 +142,10 @@ export const SocketProvider = ({ children }) => {
 
     const newSocket = io(socketUrl, {
       withCredentials: true,
+      auth: {
+        token: authUser.token || localStorage.getItem("token") || "",
+        userId: authUser._id,
+      },
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

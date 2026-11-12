@@ -52,7 +52,7 @@ const Register = () => {
       });
       setAuthUser(res.data);
       toast.success(res.data.message || "Account created successfully!");
-      navigate("/chat");
+      navigate("/chat", { replace: true });
     } catch (error) {
       toast.error(error.response?.data?.error || "Registration failed");
     } finally {

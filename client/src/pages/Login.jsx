@@ -22,18 +22,16 @@ const Login = () => {
   const { isLoading, error, isInitialized, signInWithGoogle } = useGoogleAuth();
 
   const handleGoogleSuccess = async (userData) => {
-    console.log("Google Login Data", userData);
     setLoading(true);
     try {
       const res = await api.post("/auth/googleLogin", userData);
-
-      toast.success(res.data.message);
       setAuthUser(res.data);
+      toast.success(res.data.message || "Logged in with Google!");
       setFormData({ email: "", password: "" });
-      navigate("/chat");
+      navigate("/chat", { replace: true });
     } catch (error) {
-      console.log(error);
-      toast.error(error?.response?.data?.message || "Login failed");
+      console.error(error);
+      toast.error(error?.response?.data?.error || error?.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -83,7 +81,7 @@ const Login = () => {
       });
       setAuthUser(res.data);
       toast.success(res.data.message || "Logged in successfully!");
-      navigate("/chat");
+      navigate("/chat", { replace: true });
     } catch (error) {
       toast.error(error.response?.data?.error || "Login failed");
     } finally {
