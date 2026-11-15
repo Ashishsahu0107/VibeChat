@@ -18,10 +18,30 @@ const isPlaceholder = (val) => {
 };
 
 /**
- * Helper to build Nodemailer transporter configured for Brevo SMTP
- * Supports BREVO_SMTP_*, SMTP_*, and EMAIL_* environment variables
+ * Helper to build Nodemailer transporter configured for Brevo SMTP or Gmail SMTP
+ * Supports BREVO_SMTP_*, GMAIL_*, SMTP_*, and EMAIL_* environment variables
  */
 const createBrevoTransporter = () => {
+  // Option A: Gmail SMTP (if user configures GMAIL_USER and GMAIL_APP_PASS)
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailPass = process.env.GMAIL_APP_PASS || process.env.GMAIL_APP_PASSWORD;
+  if (gmailUser && gmailPass && !isPlaceholder(gmailUser) && !isPlaceholder(gmailPass)) {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: gmailUser.trim(),
+        pass: gmailPass.trim(),
+      },
+    });
+    return {
+      transporter,
+      senderEmail: gmailUser.trim(),
+      senderName: process.env.BREVO_SENDER_NAME || "VibeChat",
+      provider: "gmail",
+    };
+  }
+
+  // Option B: Brevo SMTP Relay
   const host =
     process.env.BREVO_SMTP_HOST ||
     process.env.SMTP_HOST ||
@@ -71,6 +91,7 @@ const createBrevoTransporter = () => {
     transporter,
     senderEmail,
     senderName,
+    provider: "brevo",
   };
 };
 

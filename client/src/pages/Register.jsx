@@ -92,6 +92,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [ipBlocked, setIpBlocked] = useState(false);
 
   // OTP State (Screen 7: 6 individual square boxes)
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -193,6 +194,7 @@ const Register = () => {
 
       setResendCooldown(res.data.resendCooldown || 60);
       setExpiryCountdown(res.data.expiresIn || 300);
+      setIpBlocked(Boolean(res.data.ipBlocked));
       setOtp(["", "", "", "", "", ""]);
       setStep("otp");
     } catch (error) {
@@ -500,6 +502,17 @@ const Register = () => {
                     <FiEdit3 size={11} />
                   </button>
                 </div>
+
+                {ipBlocked && (
+                  <div className="mt-3 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-left text-xs text-amber-900 animate-in fade-in">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-950 mb-1">
+                      <span>⚠️ Brevo IP Authorization Required</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-amber-800">
+                      Brevo blocked delivery to your inbox (525). To receive emails in your inbox, check your Gmail for Brevo's <strong>"Validate IP address"</strong> email, or disable IP blocking in <em>Brevo &gt; Security &gt; Authorized IPs</em>.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* 6 Individual Square OTP Boxes */}

@@ -130,11 +130,15 @@ export const sendRegisterOtp = async (req, res) => {
       );
 
       return res.status(200).json({
-        message: "A 6-digit verification code has been sent to your email.",
+        message: emailResult.ipBlocked
+          ? "Brevo blocked email delivery (525 Unauthorized IP). Authorize your IP in Brevo, or use the verification code shown."
+          : "A 6-digit verification code has been sent to your email.",
         email: cleanEmail,
         expiresIn: 300, // 5 minutes
         resendCooldown: 60, // 60 seconds
         devOtp: emailResult.simulated ? otp : undefined,
+        ipBlocked: Boolean(emailResult.ipBlocked),
+        simulated: Boolean(emailResult.simulated),
       });
     } catch (mailError) {
       console.error(
