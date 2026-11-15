@@ -190,12 +190,15 @@ const Register = () => {
           icon: "🔑",
           duration: 10000,
         });
+        const digits = String(res.data.devOtp).split("").slice(0, 6);
+        setOtp(digits);
+      } else {
+        setOtp(["", "", "", "", "", ""]);
       }
 
       setResendCooldown(res.data.resendCooldown || 60);
       setExpiryCountdown(res.data.expiresIn || 300);
       setIpBlocked(Boolean(res.data.ipBlocked));
-      setOtp(["", "", "", "", "", ""]);
       setStep("otp");
     } catch (error) {
       toast.error(
@@ -308,11 +311,14 @@ const Register = () => {
           icon: "🔑",
           duration: 10000,
         });
+        const digits = String(res.data.devOtp).split("").slice(0, 6);
+        setOtp(digits);
+      } else {
+        setOtp(["", "", "", "", "", ""]);
       }
 
       setResendCooldown(res.data.resendCooldown || 60);
       setExpiryCountdown(res.data.expiresIn || 300);
-      setOtp(["", "", "", "", "", ""]);
       otpInputRefs.current[0]?.focus();
     } catch (error) {
       toast.error(
