@@ -114,10 +114,18 @@ const App = () => {
   const { authUser, checkAuth } = useAuthStore();
   const chats = useChatStore((state) => state.chats);
 
-  // Validate session on mount
+  // Validate session on mount ONLY if an existing session is in storage
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    const hasExistingSession =
+      localStorage.getItem("authUser") ||
+      sessionStorage.getItem("authUser") ||
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("token");
+
+    if (hasExistingSession) {
+      checkAuth();
+    }
+  }, []); // Run only once on mount
 
   // Apply saved theme on mount (default to dark)
   useEffect(() => {

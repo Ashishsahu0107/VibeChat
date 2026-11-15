@@ -12,7 +12,7 @@ const getStoredUser = () => {
 
 const useAuthStore = create((set, get) => ({
   authUser: getStoredUser(),
-  isCheckingAuth: true,
+  isCheckingAuth: false,
   isLoggingIn: false,
   isRegistering: false,
 
@@ -34,6 +34,17 @@ const useAuthStore = create((set, get) => ({
   },
 
   checkAuth: async () => {
+    const storedUser =
+      localStorage.getItem("authUser") || sessionStorage.getItem("authUser");
+    const storedToken =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+
+    // If no existing session in storage, user is a guest: don't make an unneeded network request
+    if (!storedUser && !storedToken) {
+      set({ isCheckingAuth: false });
+      return null;
+    }
+
     set({ isCheckingAuth: true });
     try {
       const res = await api.get("/auth/check");
@@ -44,7 +55,7 @@ const useAuthStore = create((set, get) => ({
         return user;
       }
     } catch (err) {
-      // If unauthorized, clear stored user
+      // If unauthorized, session expired: clear stored user cleanly
       if (err.response?.status === 401) {
         get().setAuthUser(null);
       }

@@ -1,12 +1,36 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { FiMail, FiLock, FiEyeOff, FiEye, FiArrowRight, FiCheck } from "react-icons/fi";
+import { FiMail, FiLock, FiEyeOff, FiEye } from "react-icons/fi";
 import toast from "react-hot-toast";
 import api from "../config/api";
 import useAuthStore from "../store/useAuthStore";
 import { useGoogleAuth } from "../config/GoogleAuth";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
+
+// ChatApp Purple Logo (from Figma Screens 1, 5, 6, 7, 8)
+const ChatAppLogo = ({ size = 56, className = "" }) => (
+  <div
+    className={`inline-flex items-center justify-center rounded-2xl bg-[#7C3AED] text-white shadow-lg shadow-purple-600/35 border border-purple-400/30 ${className}`}
+    style={{ width: size, height: size }}
+  >
+    <svg
+      width={size * 0.55}
+      height={size * 0.55}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M12 3C6.477 3 2 6.918 2 11.75C2 14.156 3.12 16.326 4.965 17.868C4.52 19.467 3.53 20.843 3.495 20.892C3.33 21.121 3.376 21.439 3.6 21.611C3.722 21.706 3.869 21.75 4.015 21.75C4.12 21.75 4.225 21.724 4.321 21.671C6.273 20.605 7.828 19.866 8.529 19.504C9.627 19.824 10.792 20 12 20C17.523 20 22 16.082 22 11.75C22 6.918 17.523 3 12 3Z"
+        fill="currentColor"
+      />
+      <circle cx="8" cy="11.75" r="1.5" fill="#FFFFFF" />
+      <circle cx="12" cy="11.75" r="1.5" fill="#FFFFFF" />
+      <circle cx="16" cy="11.75" r="1.5" fill="#FFFFFF" />
+    </svg>
+  </div>
+);
 
 const Login = () => {
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
@@ -19,7 +43,7 @@ const Login = () => {
 
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const { isLoading, error, isInitialized, signInWithGoogle } = useGoogleAuth();
+  const { signInWithGoogle } = useGoogleAuth();
 
   const handleGoogleSuccess = async (userData) => {
     setLoading(true);
@@ -31,19 +55,21 @@ const Login = () => {
       navigate("/chat", { replace: true });
     } catch (error) {
       console.error(error);
-      toast.error(error?.response?.data?.error || error?.response?.data?.message || "Login failed");
+      toast.error(
+        error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          "Google login failed"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const GoogleLogin = () => {
-    signInWithGoogle(handleGoogleSuccess, handleGoogleFailure);
-  };
-
-  const handleGoogleFailure = (error) => {
-    console.error("Google login failed:", error);
-    toast.error("Google login failed. Please try again.");
+    signInWithGoogle(handleGoogleSuccess, (error) => {
+      console.error("Google login failed:", error);
+      toast.error("Google login failed. Please try again.");
+    });
   };
 
   const handleChange = (e) => {
@@ -64,7 +90,7 @@ const Login = () => {
     }
 
     if (!validateEmail(formData.email)) {
-      toast.error("Please enter a valid email address (e.g. user@example.com)");
+      toast.error("Please enter a valid email address");
       return;
     }
 
@@ -89,126 +115,109 @@ const Login = () => {
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 py-12 relative z-10">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 py-8 relative z-10 font-sans">
+      {/* =====================================================================
+          EXACT FIGMA SCREEN 5: LOGIN (Clean White Mobile Card)
+          ===================================================================== */}
       <motion.div
-        initial={{ opacity: 0, y: 25 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md glass-card p-8 sm:p-10 border border-white/15 shadow-2xl relative overflow-hidden"
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-[390px] rounded-[32px] bg-white border border-purple-100 shadow-[0_25px_70px_rgba(109,40,217,0.22)] p-7 sm:p-8 relative overflow-hidden text-gray-900"
       >
-        {/* Subtle top specular glow highlight */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
-
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-cyan-300 mb-4 shadow-lg shadow-cyan-500/10">
-            <FiLock size={22} />
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Welcome Back
+        {/* Header: ChatApp Logo + Welcome Back + Subtitle */}
+        <div className="text-center mb-6">
+          <ChatAppLogo size={52} className="mb-3.5" />
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+            Welcome Back 👋
           </h2>
-          <p className="text-sm text-slate-300/70 mt-1.5">
-            Log in to your VibeChat account to continue
+          <p className="text-xs sm:text-sm font-medium text-gray-500 mt-0.5">
+            Login to your account
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">
-              Email Address
-            </label>
-            <div className={`glass-input flex items-center gap-3 px-3.5 py-3 ${formData.email && !validateEmail(formData.email) ? 'border-rose-500/70' : ''}`}>
-              <FiMail className="text-slate-400 shrink-0" size={17} />
-              <input
-                type="email"
-                name="email"
-                className="grow bg-transparent text-sm text-white focus:outline-none placeholder:text-slate-500"
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            {formData.email && !validateEmail(formData.email) && (
-              <span className="text-xs text-rose-400 block pt-0.5">
-                Please enter a valid email address
-              </span>
-            )}
+        <form onSubmit={handleSubmit} className="space-y-3.5">
+          {/* Email or Phone */}
+          <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-[#F9FAFB] border border-gray-200 text-gray-900 transition-all focus-within:border-[#7C3AED] focus-within:ring-2 focus-within:ring-[#7C3AED]/20 focus-within:bg-white">
+            <FiMail className="text-gray-400 shrink-0" size={18} />
+            <input
+              type="email"
+              name="email"
+              className="grow bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+              placeholder="Email or Phone"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
           </div>
 
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
-                Password
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowForgotPassword(true)}
-                className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors font-medium cursor-pointer"
-              >
-                Forgot password?
-              </button>
-            </div>
-            <div className="glass-input flex items-center gap-3 px-3.5 py-3">
-              <FiLock className="text-slate-400 shrink-0" size={17} />
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                className="grow bg-transparent text-sm text-white focus:outline-none placeholder:text-slate-500"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-              <button 
-                type="button" 
-                onClick={togglePasswordVisibility}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-              </button>
-            </div>
+          {/* Password */}
+          <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-[#F9FAFB] border border-gray-200 text-gray-900 transition-all focus-within:border-[#7C3AED] focus-within:ring-2 focus-within:ring-[#7C3AED]/20 focus-within:bg-white">
+            <FiLock className="text-gray-400 shrink-0" size={18} />
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              className="grow bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-gray-400 hover:text-gray-700 transition-colors focus:outline-none cursor-pointer"
+            >
+              {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+            </button>
           </div>
 
+          {/* Forgot Password Link */}
+          <div className="flex justify-end pt-0.5">
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-xs text-[#6D28D9] hover:text-[#5B21B6] transition-colors font-semibold cursor-pointer"
+            >
+              Forgot Password?
+            </button>
+          </div>
+
+          {/* Solid Purple Pill Button: Login */}
           <button
             type="submit"
-            className="btn-glow w-full py-3.5 text-sm sm:text-base font-semibold flex items-center justify-center gap-2 mt-2 shadow-xl"
             disabled={loading}
+            className="w-full mt-2 py-3.5 rounded-full font-bold text-white bg-[#6D28D9] hover:bg-[#5B21B6] shadow-lg shadow-purple-600/30 transition-all duration-200 active:scale-[0.98] flex items-center justify-center cursor-pointer disabled:opacity-50 text-sm sm:text-base"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <>
-                <span>Sign In</span>
-                <FiArrowRight size={17} />
-              </>
+              "Login"
             )}
           </button>
         </form>
 
-        <div className="relative my-7 flex items-center justify-center">
+        {/* Divider: or continue with */}
+        <div className="relative my-5 flex items-center justify-center">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-white/10" />
+            <div className="w-full border-t border-gray-200" />
           </div>
-          <span className="relative bg-[#0d1424] px-4 text-xs uppercase tracking-wider text-slate-400 font-semibold rounded-full border border-white/[0.06]">
-            Or continue with
+          <span className="relative bg-white px-3 text-xs text-gray-400 font-medium">
+            or continue with
           </span>
         </div>
 
-        <button 
+        {/* Google Login Button */}
+        <button
           type="button"
-          className="btn-glass w-full py-3 px-4 flex items-center justify-center gap-3 text-sm font-medium hover:border-white/30 cursor-pointer"
           onClick={GoogleLogin}
+          className="w-full py-3 px-4 rounded-full bg-[#F9FAFB] border border-gray-200 hover:bg-gray-100/70 hover:border-gray-300 text-xs sm:text-sm font-semibold text-gray-700 flex items-center justify-center gap-2.5 transition-all duration-200 cursor-pointer active:scale-[0.98] shadow-xs"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 48 48"
-            className="w-5 h-5"
+            className="w-4 h-4 sm:w-5 sm:h-5 shrink-0"
           >
             <path
               fill="#FFC107"
@@ -227,13 +236,17 @@ const Login = () => {
               d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"
             />
           </svg>
-          <span className="text-slate-100 font-semibold">Sign in with Google</span>
+          <span>Continue with Google</span>
         </button>
 
-        <p className="text-center text-sm text-slate-400 mt-6">
+        {/* Footer: Don't have an account? Sign Up */}
+        <p className="text-center text-xs sm:text-sm text-gray-500 mt-5">
           Don't have an account?{" "}
-          <Link to="/register" className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
-            Create Account
+          <Link
+            to="/register"
+            className="text-[#6D28D9] hover:text-[#5B21B6] font-bold transition-colors"
+          >
+            Sign Up
           </Link>
         </p>
       </motion.div>

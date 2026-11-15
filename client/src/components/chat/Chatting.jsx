@@ -32,6 +32,7 @@ import {
   MdContentCopy,
   MdStar,
   MdStarOutline,
+  MdInfoOutline,
 } from "react-icons/md";
 import AudioCall from "./AudioCall";
 import VideoCall from "./VideoCall";
@@ -48,8 +49,15 @@ import {
   IoBarChart,
   IoCalendar,
   IoSparkles,
+  IoLocation,
 } from "react-icons/io5";
-import { PollModal, ContactModal, EventModal } from "./AttachmentModals";
+import {
+  PollModal,
+  ContactModal,
+  EventModal,
+  LocationModal,
+  MessageInfoModal,
+} from "./AttachmentModals";
 
 // ── Date Separator ─────────────────────────────────────────────────────────────
 const DateSeparator = ({ date }) => {
@@ -113,6 +121,7 @@ const MessageContextMenu = ({
   onStar,
   onForward,
   onReact,
+  onInfo,
 }) => {
   const menuRef = useRef(null);
 
@@ -136,6 +145,14 @@ const MessageContextMenu = ({
       </div>
 
       <div className="py-1">
+        <MenuItem
+          icon={<MdInfoOutline size={16} />}
+          label="Message info"
+          onClick={() => {
+            onInfo && onInfo(message);
+            onClose();
+          }}
+        />
         <MenuItem
           icon={<MdOutlineReply size={16} />}
           label="Reply"
@@ -375,8 +392,8 @@ const MessageBubble = ({
           className={`relative px-3.5 py-2.5 rounded-2xl shadow-lg cursor-pointer select-text transition-all
             ${
               isMe
-                ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-br-xs border border-white/20 shadow-blue-600/25"
-                : "bg-[#0f172a]/85 backdrop-blur-xl text-slate-100 rounded-bl-xs border border-white/12 shadow-black/30"
+                ? "bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-2xl rounded-br-xs border border-purple-400/25 shadow-md shadow-purple-600/30"
+                : "bg-[#181135]/90 backdrop-blur-xl text-slate-100 rounded-2xl rounded-bl-xs border border-purple-500/15 shadow-black/30"
             }
             ${isDeleted ? "opacity-60 italic" : ""}
           `}
@@ -537,6 +554,8 @@ const Chatting = ({ selectedUser, onBack }) => {
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showPollModal, setShowPollModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [selectedMessageInfo, setSelectedMessageInfo] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -618,6 +637,12 @@ const Chatting = ({ selectedUser, onBack }) => {
       label: "Contact",
       icon: <IoPerson size={20} className="text-[#06b6d4]" />,
       action: () => setShowContactModal(true),
+    },
+    {
+      id: "location",
+      label: "Location",
+      icon: <IoLocation size={20} className="text-[#10b981]" />,
+      action: () => setShowLocationModal(true),
     },
     {
       id: "poll",
@@ -1238,6 +1263,7 @@ const Chatting = ({ selectedUser, onBack }) => {
           onCopy={() => handleCopy(contextMenu.message)}
           onStar={() => handleStar(contextMenu.message)}
           onForward={() => handleForward(contextMenu.message)}
+          onInfo={(msg) => setSelectedMessageInfo(msg)}
           onReact={(emoji) => handleReact(contextMenu.message._id, emoji)}
         />
       )}
@@ -1522,6 +1548,16 @@ const Chatting = ({ selectedUser, onBack }) => {
         onClose={() => setShowContactModal(false)}
         onSendContact={handleSendCustomMessage}
         contacts={contactsList}
+      />
+      <LocationModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onSendLocation={handleSendCustomMessage}
+      />
+      <MessageInfoModal
+        isOpen={Boolean(selectedMessageInfo)}
+        message={selectedMessageInfo}
+        onClose={() => setSelectedMessageInfo(null)}
       />
       <EventModal
         isOpen={showEventModal}

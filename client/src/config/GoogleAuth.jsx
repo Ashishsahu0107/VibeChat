@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+let isGoogleInitialized = false;
+let isScriptAppended = false;
 let globalCredentialHandler = null;
 
 // Custom hook for Google Authentication
 export const useGoogleAuth = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!isGoogleInitialized);
   const [error, setError] = useState(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(isGoogleInitialized);
 
   useEffect(() => {
     // Check if Client ID is available
@@ -18,6 +20,40 @@ export const useGoogleAuth = () => {
       return;
     }
 
+    // If already initialized once across the app session, reuse it
+    if (isGoogleInitialized && window.google?.accounts?.id) {
+      setIsInitialized(true);
+      setIsLoading(false);
+      return;
+    }
+
+    const initializeGoogleAuth = () => {
+      try {
+        if (!isGoogleInitialized && window.google?.accounts?.id) {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: (response) => {
+              if (globalCredentialHandler) {
+                globalCredentialHandler(response);
+              }
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+
+          isGoogleInitialized = true;
+          console.log("Google Identity Services initialized successfully");
+        }
+
+        setIsInitialized(true);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Google Identity Services initialization failed:", error);
+        setError("Failed to initialize Google Auth");
+        setIsLoading(false);
+      }
+    };
+
     const loadGoogleIdentityServices = () => {
       return new Promise((resolve, reject) => {
         if (typeof window === "undefined") {
@@ -25,30 +61,46 @@ export const useGoogleAuth = () => {
           return;
         }
 
-        // Check if Google Identity Services is already loaded
+        // Check if Google Identity Services is already available
         if (window.google?.accounts?.id) {
-          console.log("Google Identity Services already loaded");
           initializeGoogleAuth();
           resolve();
           return;
         }
 
-        // Load Google Identity Services script
+        // If script is already in document, wait for it to load
+        const existingScript = document.querySelector(
+          'script[src="https://accounts.google.com/gsi/client"]'
+        );
+        if (existingScript || isScriptAppended) {
+          const checkInterval = setInterval(() => {
+            if (window.google?.accounts?.id) {
+              clearInterval(checkInterval);
+              initializeGoogleAuth();
+              resolve();
+            }
+          }, 100);
+          setTimeout(() => clearInterval(checkInterval), 10000);
+          return;
+        }
+
+        // Load Google Identity Services script once
+        isScriptAppended = true;
         const script = document.createElement("script");
         script.src = "https://accounts.google.com/gsi/client";
         script.async = true;
         script.defer = true;
 
         script.onload = () => {
-          console.log("Google Identity Services script loaded");
           initializeGoogleAuth();
           resolve();
         };
 
         script.onerror = (error) => {
+          isScriptAppended = false;
           console.error(
             "Failed to load Google Identity Services script:",
-            error,
+            error
           );
           setError("Failed to load Google Identity Services");
           setIsLoading(false);
@@ -57,29 +109,6 @@ export const useGoogleAuth = () => {
 
         document.head.appendChild(script);
       });
-    };
-
-    const initializeGoogleAuth = () => {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: (response) => {
-            if (globalCredentialHandler) {
-              globalCredentialHandler(response);
-            }
-          },
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-
-        console.log("Google Identity Services initialized successfully");
-        setIsInitialized(true);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Google Identity Services initialization failed:", error);
-        setError("Failed to initialize Google Auth");
-        setIsLoading(false);
-      }
     };
 
     loadGoogleIdentityServices().catch((error) => {

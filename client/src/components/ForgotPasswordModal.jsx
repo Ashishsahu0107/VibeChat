@@ -158,22 +158,19 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200 font-sans"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="glass-card w-full max-w-md overflow-hidden border border-white/20 p-6 sm:p-8 relative shadow-2xl shadow-blue-950/60 animate-in zoom-in-95 duration-200"
+        className="w-full max-w-[390px] rounded-[32px] bg-white border border-purple-100 shadow-[0_25px_70px_rgba(109,40,217,0.25)] p-7 sm:p-8 relative overflow-hidden text-gray-900 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Highlight Line */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
-
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-full transition-colors cursor-pointer"
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
           aria-label="Close"
         >
           <FiX size={18} />
@@ -182,56 +179,48 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
         {/* STEP 1: ENTER EMAIL */}
         {step === 1 && (
           <div>
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 text-cyan-400 flex items-center justify-center mx-auto mb-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
-              <FiKey size={26} />
+            <div className="text-center mb-5">
+              <div className="w-14 h-14 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] border border-purple-200 flex items-center justify-center mx-auto mb-3 shadow-xs">
+                <FiLock size={24} />
+              </div>
+
+              <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
+                Forgot Password?
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
+                Enter your registered email address and we'll send you a 6-digit
+                code to reset your password.
+              </p>
             </div>
 
-            <h3 className="text-2xl font-bold text-center text-white mb-2">
-              Forgot Password?
-            </h3>
-            <p className="text-sm text-center text-slate-300/80 mb-6 leading-relaxed">
-              Enter your registered email address and we'll send you a 6-digit
-              code to reset your password.
-            </p>
-
             {errorMessage && (
-              <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3 mb-4 text-xs text-rose-300 font-medium text-center leading-relaxed">
+              <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3 mb-4 text-xs text-rose-600 font-medium text-center leading-relaxed">
                 {errorMessage}
               </div>
             )}
 
             <form onSubmit={handleSendOtp} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">
-                  Email Address
-                </label>
-                <div
-                  className={`glass-input flex items-center gap-3 px-3.5 py-3 ${
-                    email && !validateEmail(email) ? "border-rose-500/70" : ""
-                  }`}
-                >
-                  <FiMail className="text-slate-400 shrink-0" size={17} />
-                  <input
-                    type="email"
-                    className="grow bg-transparent text-sm text-white focus:outline-none placeholder:text-slate-500"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoFocus
-                  />
-                </div>
-                {email && !validateEmail(email) && (
-                  <span className="text-xs text-rose-400 block pt-0.5">
-                    Please enter a valid email address
-                  </span>
-                )}
+              <div
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-[#F9FAFB] border text-gray-900 transition-all focus-within:border-[#7C3AED] focus-within:ring-2 focus-within:ring-[#7C3AED]/20 focus-within:bg-white ${
+                  email && !validateEmail(email) ? "border-rose-500" : "border-gray-200"
+                }`}
+              >
+                <FiMail className="text-gray-400 shrink-0" size={18} />
+                <input
+                  type="email"
+                  className="grow bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-glow w-full py-3.5 text-sm sm:text-base font-semibold flex items-center justify-center gap-2 mt-3 shadow-xl"
+                className="w-full mt-2 py-3.5 rounded-full font-bold text-white bg-[#6D28D9] hover:bg-[#5B21B6] shadow-lg shadow-purple-600/30 transition-all duration-200 active:scale-[0.98] flex items-center justify-center cursor-pointer disabled:opacity-50 text-sm sm:text-base"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -243,7 +232,7 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="btn-glass w-full py-3 text-sm font-medium mt-1"
+                className="w-full py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
               >
                 Back to Login
               </button>
@@ -256,68 +245,70 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
           <div>
             <button
               onClick={() => setStep(1)}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-white mb-4 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 mb-3 transition-colors cursor-pointer"
             >
               <FiArrowLeft size={14} /> Change email
             </button>
 
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-500/20 to-blue-500/20 text-purple-300 flex items-center justify-center mx-auto mb-4 border border-purple-500/30 shadow-lg shadow-purple-500/10">
-              <FiLock size={26} />
-            </div>
+            <div className="text-center mb-4">
+              <div className="w-13 h-13 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] border border-purple-200 flex items-center justify-center mx-auto mb-2 shadow-xs">
+                <FiLock size={22} />
+              </div>
 
-            <h3 className="text-2xl font-bold text-center text-white mb-1">
-              Reset Password
-            </h3>
-            <p className="text-xs text-center text-slate-300/70 mb-4 px-2">
-              Code sent to{" "}
-              <span className="font-semibold text-cyan-300">{email}</span>
-            </p>
+              <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
+                Reset Password
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Code sent to{" "}
+                <span className="font-semibold text-[#6D28D9]">{email}</span>
+              </p>
+            </div>
 
             {/* Dev Mode OTP Banner (if simulated) */}
             {devOtp && (
-              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl p-3 mb-4 flex items-center justify-between text-xs">
+              <div className="bg-purple-50 border border-purple-200 rounded-2xl p-2.5 mb-3 flex items-center justify-between text-xs">
                 <div>
-                  <span className="font-semibold text-cyan-300 block">
-                    Test Code (Demo):
+                  <span className="font-semibold text-purple-700 block text-[11px]">
+                    Demo Code:
                   </span>
-                  <span className="text-sm font-mono tracking-widest font-bold text-white">
+                  <span className="text-sm font-mono tracking-widest font-bold text-[#6D28D9]">
                     {devOtp}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setOtp(devOtp)}
-                  className="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-semibold border border-cyan-500/30 transition-colors"
+                  className="px-2.5 py-1 rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 transition-colors"
                 >
                   Auto-Fill
                 </button>
               </div>
             )}
 
-            <form onSubmit={handleResetPassword} className="space-y-4">
+            <form onSubmit={handleResetPassword} className="space-y-3">
               {/* 6-Digit OTP */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-semibold text-gray-600">
                     6-Digit Code
                   </span>
                   <button
                     type="button"
                     onClick={handleResendOtp}
                     disabled={resendCooldown > 0 || loading}
-                    className="text-xs text-cyan-400 hover:underline font-medium disabled:opacity-50 cursor-pointer"
+                    className="text-[#6D28D9] hover:underline font-semibold disabled:opacity-50 cursor-pointer"
                   >
                     {resendCooldown > 0
                       ? `Resend in ${resendCooldown}s`
                       : "Resend Code"}
                   </button>
                 </div>
-                <div className="glass-input flex items-center gap-3 px-3.5 py-3">
-                  <FiKey className="text-slate-400 shrink-0" size={17} />
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#F9FAFB] border border-gray-200 text-gray-900 focus-within:border-[#7C3AED] focus-within:ring-2 focus-within:ring-[#7C3AED]/20 focus-within:bg-white">
+                  <FiKey className="text-gray-400 shrink-0" size={17} />
                   <input
                     type="text"
                     maxLength={6}
-                    className="grow font-mono tracking-widest text-center text-lg font-bold bg-transparent text-white focus:outline-none"
+                    className="grow font-mono tracking-widest text-center text-lg font-bold bg-transparent text-gray-900 focus:outline-none"
                     placeholder="123456"
                     value={otp}
                     onChange={(e) =>
@@ -330,15 +321,15 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
               </div>
 
               {/* New Password */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-600 block">
                   New Password
                 </label>
-                <div className="glass-input flex items-center gap-3 px-3.5 py-3">
-                  <FiLock className="text-slate-400 shrink-0" size={17} />
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#F9FAFB] border border-gray-200 text-gray-900 focus-within:border-[#7C3AED] focus-within:ring-2 focus-within:ring-[#7C3AED]/20 focus-within:bg-white">
+                  <FiLock className="text-gray-400 shrink-0" size={17} />
                   <input
                     type={showPassword ? "text" : "password"}
-                    className="grow bg-transparent text-sm text-white focus:outline-none placeholder:text-slate-500"
+                    className="grow bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
                     placeholder="At least 6 characters"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -348,7 +339,7 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-slate-400 hover:text-white cursor-pointer"
+                    className="text-gray-400 hover:text-gray-700 cursor-pointer"
                   >
                     {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
                   </button>
@@ -356,33 +347,27 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
               </div>
 
               {/* Confirm Password */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block">
-                  Confirm New Password
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-600 block">
+                  Confirm Password
                 </label>
-                <div className="glass-input flex items-center gap-3 px-3.5 py-3">
-                  <FiLock className="text-slate-400 shrink-0" size={17} />
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#F9FAFB] border border-gray-200 text-gray-900 focus-within:border-[#7C3AED] focus-within:ring-2 focus-within:ring-[#7C3AED]/20 focus-within:bg-white">
+                  <FiLock className="text-gray-400 shrink-0" size={17} />
                   <input
                     type={showPassword ? "text" : "password"}
-                    className="grow bg-transparent text-sm text-white focus:outline-none placeholder:text-slate-500"
-                    placeholder="Repeat new password"
+                    className="grow bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                    placeholder="Confirm Password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    minLength={6}
                   />
                 </div>
-                {confirmPassword && newPassword !== confirmPassword && (
-                  <span className="text-xs text-rose-400 block pt-0.5">
-                    Passwords do not match
-                  </span>
-                )}
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-glow w-full py-3.5 text-sm sm:text-base font-semibold flex items-center justify-center gap-2 mt-3 shadow-xl"
+                className="w-full mt-2 py-3.5 rounded-full font-bold text-white bg-[#6D28D9] hover:bg-[#5B21B6] shadow-lg shadow-purple-600/30 transition-all duration-200 active:scale-[0.98] flex items-center justify-center cursor-pointer disabled:opacity-50 text-sm sm:text-base"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -397,14 +382,14 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
         {/* STEP 3: SUCCESS CONFIRMATION */}
         {step === 3 && (
           <div className="text-center py-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-400 flex items-center justify-center mx-auto mb-4 border border-emerald-500/30 shadow-inner">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto mb-3 shadow-xs">
               <FiCheckCircle size={32} />
             </div>
 
-            <h3 className="text-2xl font-bold text-white mb-2">
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">
               Password Reset!
             </h3>
-            <p className="text-sm text-slate-300/80 mb-6 leading-relaxed">
+            <p className="text-xs sm:text-sm text-gray-500 mb-5 leading-relaxed">
               Your password has been changed successfully. You can now log in
               with your new credentials.
             </p>
@@ -412,7 +397,7 @@ const ForgotPasswordModal = ({ isOpen, onClose, initialEmail = "" }) => {
             <button
               type="button"
               onClick={onClose}
-              className="btn-glow w-full py-3.5 text-base font-semibold rounded-xl shadow-xl"
+              className="w-full py-3.5 rounded-full font-bold text-white bg-[#6D28D9] hover:bg-[#5B21B6] shadow-lg shadow-purple-600/30 transition-all duration-200 cursor-pointer text-sm sm:text-base"
             >
               Back to Login
             </button>

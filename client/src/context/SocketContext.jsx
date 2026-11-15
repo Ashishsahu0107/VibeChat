@@ -134,11 +134,14 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const socketUrl =
-      import.meta.env.VITE_API_BASE_URL ||
-      (window.location.origin.includes("localhost")
-        ? `http://${window.location.hostname}:4500`
-        : "/");
+    const isLocalhost =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1");
+
+    const socketUrl = isLocalhost
+      ? `http://${window.location.hostname}:4500`
+      : import.meta.env.VITE_API_BASE_URL || "/";
 
     const newSocket = io(socketUrl, {
       withCredentials: true,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import RecentChat from '../components/chat/RecentChat';
 import Chatting from '../components/chat/Chatting';
 import ContactsList from '../components/chat/sidebar/ContactsList';
+import CallsList from '../components/chat/sidebar/CallsList';
 import SettingsView from '../components/chat/sidebar/SettingsView';
 import StatusList from '../components/chat/sidebar/StatusList';
 import { FiMessageSquare, FiPhone, FiUsers, FiSettings, FiSearch, FiCircle } from 'react-icons/fi';
@@ -13,9 +14,9 @@ import GlobalSearchModal from '../components/chat/GlobalSearchModal';
 
 const NAV_ITEMS = [
   { id: 'chats', icon: <FiMessageSquare size={20} />, label: 'Chats' },
-  { id: 'status', icon: <FiCircle size={20} />, label: 'Status' },
-  { id: 'search', icon: <FiSearch size={20} />, label: 'Search' },
+  { id: 'calls', icon: <FiPhone size={20} />, label: 'Calls' },
   { id: 'contacts', icon: <FiUsers size={20} />, label: 'Contacts' },
+  { id: 'status', icon: <FiCircle size={20} />, label: 'Status' },
   { id: 'settings', icon: <FiSettings size={20} />, label: 'Settings' },
 ];
 
@@ -40,6 +41,8 @@ const Chat = () => {
 
   const renderSidebar = () => {
     switch (activeTab) {
+      case 'calls':
+        return <CallsList onBack={() => setActiveTab('chats')} />;
       case 'status':
         return <StatusList />;
       case 'contacts':
@@ -49,6 +52,7 @@ const Chat = () => {
               setSelectedChat(c);
               setActiveTab('chats');
             }}
+            onBack={() => setActiveTab('chats')}
           />
         );
       case 'settings':
@@ -70,7 +74,7 @@ const Chat = () => {
       <div className="hidden md:flex flex-col items-center py-5 bg-[#0a0f1d]/85 backdrop-blur-2xl border-r border-white/10 w-[74px] shrink-0 justify-between z-20 shadow-xl shadow-black/40">
         <div className="flex flex-col gap-3 w-full items-center">
           {/* Profile avatar with glowing ring */}
-          <div className="w-11 h-11 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-500 shadow-lg shadow-cyan-500/20 mb-3 cursor-pointer hover:scale-105 transition-transform" onClick={() => handleTabSwitch('settings')}>
+          <div className="w-11 h-11 rounded-full p-[2px] bg-gradient-to-tr from-[#6D28D9] to-[#8B5CF6] shadow-lg shadow-purple-600/25 mb-3 cursor-pointer hover:scale-105 transition-transform" onClick={() => handleTabSwitch('settings')}>
             <div className="w-full h-full rounded-full overflow-hidden bg-slate-900">
               <img
                 src={authUser?.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.fullName || 'U')}&background=7c3aed&color=fff`}
@@ -91,7 +95,7 @@ const Chat = () => {
                   onClick={() => handleTabSwitch(item.id)}
                   className={`w-11 h-11 flex items-center justify-center rounded-2xl transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? 'bg-gradient-to-tr from-cyan-500 via-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 border border-white/25 scale-105'
+                      ? 'bg-[#7C3AED] text-white shadow-lg shadow-purple-600/35 border border-purple-400/25 scale-105'
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.08]'
                   }`}
                 >
@@ -179,11 +183,11 @@ const Chat = () => {
                   onClick={() => handleTabSwitch(item.id)}
                   className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition-all cursor-pointer ${
                     isActive
-                      ? 'text-cyan-400 font-semibold scale-105'
+                      ? 'text-[#A78BFA] font-semibold scale-105'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  <div className={isActive ? 'drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]' : ''}>
+                  <div className={isActive ? 'drop-shadow-[0_0_8px_rgba(167,139,250,0.6)]' : ''}>
                     {item.icon}
                   </div>
                   <span className="text-[10px] font-medium tracking-tight">{item.label}</span>

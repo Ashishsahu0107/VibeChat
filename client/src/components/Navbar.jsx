@@ -76,14 +76,14 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 border border-white/20 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#6D28D9] to-[#8B5CF6] flex items-center justify-center text-white shadow-lg shadow-purple-600/35 border border-purple-400/20 group-hover:scale-105 transition-transform">
               <FiMessageSquare size={20} className="drop-shadow" />
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold text-gradient tracking-tight">
                 VibeChat
               </span>
-              <span className="text-[10px] text-cyan-400/80 uppercase font-semibold tracking-widest -mt-1">
+              <span className="text-[10px] text-purple-300/80 uppercase font-semibold tracking-widest -mt-1">
                 Real-Time
               </span>
             </div>
@@ -98,9 +98,9 @@ const Navbar = () => {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
                       isActive
-                        ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm"
+                        ? "bg-[#7C3AED] text-white shadow-md shadow-purple-600/30"
                         : "text-slate-300 hover:text-white hover:bg-white/[0.06]"
                     }`}
                   >

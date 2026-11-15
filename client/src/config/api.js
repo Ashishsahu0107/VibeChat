@@ -1,7 +1,24 @@
 import axios from "axios";
 
+const getBaseUrl = () => {
+  // When running locally in browser, route via the Vite proxy "/api" to talk to local server
+  if (
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1")
+  ) {
+    const customDevUrl = import.meta.env.VITE_DEV_API_URL;
+    if (customDevUrl) return customDevUrl;
+    if (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.includes("localhost")) {
+      return import.meta.env.VITE_API_URL;
+    }
+    return "/api";
+  }
+  return import.meta.env.VITE_API_URL || "/api";
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: getBaseUrl(),
   withCredentials: true,
   timeout: 30000,
 });
@@ -35,12 +52,14 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       const url = error.config?.url || "";
       const isAuthAction =
+        url.includes("/auth/") ||
         url.includes("/auth/login") ||
         url.includes("/auth/register") ||
+        url.includes("/auth/check") ||
         url.includes("/auth/forgot-password") ||
         url.includes("/auth/reset-password");
 
-      // Don't auto-redirect if this is a login/register submission error (show error toast instead)
+      // Don't auto-redirect if this is an explicit auth action/check (handle silently or show toast)
       if (!isAuthAction) {
         localStorage.removeItem("authUser");
         localStorage.removeItem("token");

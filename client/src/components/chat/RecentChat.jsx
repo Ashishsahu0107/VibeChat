@@ -108,9 +108,8 @@ const NewChatModal = ({ onClose, onSelectChat }) => {
   );
 };
 
-// ── New Group Modal ────────────────────────────────────────────────────────────
+// ── New Group Modal (Figma Screen 23: Create Group) ───────────────────────────
 const NewGroupModal = ({ onClose, onSelectChat }) => {
-  const [step, setStep] = useState(1); // 1: name, 2: members
   const [groupName, setGroupName] = useState("");
   const [groupDesc, setGroupDesc] = useState("");
   const [search, setSearch] = useState("");
@@ -150,14 +149,14 @@ const NewGroupModal = ({ onClose, onSelectChat }) => {
   };
 
   const handleCreate = async () => {
-    if (!groupName.trim()) return toast.error("Group name required");
-    if (selectedUsers.length < 1) return toast.error("Add at least 1 member");
+    if (!groupName.trim()) return toast.error("Group name is required");
+    if (selectedUsers.length < 1) return toast.error("Please add at least 1 member");
     setCreating(true);
     try {
       const group = await createGroup(groupName, selectedUsers, groupDesc);
       onSelectChat(group);
       onClose();
-      toast.success("Group created!");
+      toast.success("Group created successfully!");
     } catch {
       toast.error("Failed to create group");
     } finally {
@@ -166,141 +165,128 @@ const NewGroupModal = ({ onClose, onSelectChat }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md px-4 animate-in fade-in duration-200">
-      <div className="glass-card w-full max-w-sm overflow-hidden border border-white/20 shadow-2xl shadow-purple-950/50 animate-in zoom-in-95 duration-200">
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
-          <h3 className="font-bold text-white flex-1 text-base">Create New Group</h3>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-md px-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-sm rounded-[32px] bg-[#12111A] border border-white/10 shadow-2xl shadow-purple-950/60 overflow-hidden font-sans text-white">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <h3 className="font-bold text-white text-base">Create Group</h3>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-full transition-colors cursor-pointer"
+            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/[0.08] rounded-full transition-colors cursor-pointer"
           >
             <FiX size={18} />
           </button>
         </div>
 
-        {step === 1 && (
-          <div className="px-5 py-5 space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block mb-1.5">
-                Group Name *
-              </label>
-              <input
-                autoFocus
-                type="text"
-                placeholder="e.g. Design Systems, Team Vibe"
-                className="glass-input text-xs w-full px-3.5 py-2.5"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-              />
+        <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+          {/* Group Avatar Placeholder (Screen 23) */}
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full bg-[#1E1B2E] border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-lg shadow-purple-900/30">
+                <FiUsers size={32} />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-md">
+                <FiCheck size={13} />
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-200 uppercase tracking-wider block mb-1.5">
-                Description (optional)
-              </label>
-              <textarea
-                placeholder="What's this group about?"
-                className="glass-input text-xs w-full px-3.5 py-2.5 resize-none block"
-                value={groupDesc}
-                onChange={(e) => setGroupDesc(e.target.value)}
-                rows={2}
-              />
-            </div>
-            <button
-              onClick={() => setStep(2)}
-              disabled={!groupName.trim()}
-              className="btn-glow w-full py-2.5 text-xs font-semibold mt-2"
-            >
-              Next: Select Members
-            </button>
           </div>
-        )}
 
-        {step === 2 && (
+          {/* Group Name input */}
           <div>
-            {selectedUsers.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 px-4 py-2.5 border-b border-white/10 bg-white/[0.02]">
-                {selectedUsers.map((u) => (
-                  <div
-                    key={u._id}
-                    className="flex items-center gap-1.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/30 text-xs rounded-full px-2.5 py-0.5"
-                  >
-                    <span>{u.fullName.split(" ")[0]}</span>
-                    <button onClick={() => toggleUser(u)} className="hover:text-white cursor-pointer">
-                      <FiX size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="px-4 py-2.5">
-              <div className="relative">
-                <FiSearch
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={14}
-                />
-                <input
-                  type="text"
-                  placeholder="Search participants..."
-                  className="glass-input text-xs w-full pl-9 pr-3 py-2"
-                  value={search}
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
-              </div>
+            <label className="text-xs font-semibold text-gray-300 block mb-1.5">
+              Group Name
+            </label>
+            <input
+              autoFocus
+              type="text"
+              placeholder="e.g. Friends Group"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-white/[0.06] border border-white/10 text-white placeholder:text-gray-400 text-xs focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]/30"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+            />
+          </div>
+
+          {/* Add Members section (Screen 23: Add Members (x/256)) */}
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold text-gray-300 mb-2">
+              <span>Add Members</span>
+              <span className="text-[#A78BFA] font-mono">({selectedUsers.length}/256)</span>
             </div>
-            <div className="max-h-52 overflow-y-auto px-3 space-y-1">
+
+            {/* Search participant */}
+            <div className="relative mb-2">
+              <FiSearch
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={14}
+              />
+              <input
+                type="text"
+                placeholder="Search contact..."
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-500 text-xs focus:outline-none focus:border-[#7C3AED]"
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+
+            {/* List with Checkbox */}
+            <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
               {allUsers.map((u) => {
                 const isSelected = selectedUsers.some((x) => x._id === u._id);
                 return (
                   <div
                     key={u._id}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
-                      isSelected 
-                        ? "bg-gradient-to-r from-cyan-500/15 to-purple-500/15 border border-cyan-500/30 text-white" 
-                        : "hover:bg-white/[0.05] text-slate-200"
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-[#7C3AED]/15 border border-[#7C3AED]/30 text-white"
+                        : "hover:bg-white/[0.05] text-gray-200 border border-transparent"
                     }`}
                     onClick={() => toggleUser(u)}
                   >
-                    <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-white/10">
-                      <img
-                        src={
-                          u.profilePic ||
-                          `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}`
-                        }
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-purple-400/20">
+                        <img
+                          src={
+                            u.profilePic ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                              u.fullName || "User",
+                            )}&background=7c3aed&color=fff`
+                          }
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-xs font-medium truncate">{u.fullName}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-xs truncate">{u.fullName}</div>
+
+                    {/* Purple checkbox (Figma Screen 23) */}
+                    <div
+                      className={`w-5 h-5 rounded-md flex items-center justify-center transition-all ${
+                        isSelected
+                          ? "bg-[#7C3AED] text-white shadow-xs"
+                          : "border border-gray-600 bg-white/[0.04]"
+                      }`}
+                    >
+                      {isSelected && <FiCheck size={12} strokeWidth={3} />}
                     </div>
-                    {isSelected && (
-                      <FiCheck size={14} className="text-cyan-400 shrink-0" />
-                    )}
                   </div>
                 );
               })}
             </div>
-            <div className="flex gap-2 px-4 py-3 border-t border-white/10 mt-2">
-              <button
-                onClick={() => setStep(1)}
-                className="btn-glass flex-1 py-2 text-xs font-medium"
-              >
-                Back
-              </button>
-              <button
-                onClick={handleCreate}
-                disabled={creating || selectedUsers.length < 1}
-                className="btn-glow flex-1 py-2 text-xs font-semibold"
-              >
-                {creating ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
-                ) : (
-                  "Create Group"
-                )}
-              </button>
-            </div>
           </div>
-        )}
+
+          {/* Create Group Solid Purple Pill Button */}
+          <button
+            onClick={handleCreate}
+            disabled={creating || !groupName.trim() || selectedUsers.length < 1}
+            className="w-full py-3 rounded-full font-bold text-white bg-[#7C3AED] hover:bg-[#6D28D9] shadow-lg shadow-purple-600/30 transition-all duration-200 active:scale-[0.98] flex items-center justify-center cursor-pointer disabled:opacity-50 text-xs sm:text-sm mt-2"
+          >
+            {creating ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              "Create Group"
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -389,6 +375,7 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [filterTab, setFilterTab] = useState("all"); // "all", "unread", "groups"
 
   const { authUser } = useAuthStore();
   const { onlineUsers } = useSocket();
@@ -414,7 +401,19 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
       );
       const isArchived = userState?.isArchived;
 
-      return matchesSearch && (showArchived ? isArchived : !isArchived);
+      if (matchesSearch && (showArchived ? isArchived : !isArchived)) {
+        if (filterTab === "unread") {
+          return (userState?.unreadCount || 0) > 0;
+        }
+        if (filterTab === "groups") {
+          return Boolean(chat.isGroupChat);
+        }
+        if (filterTab === "pinned") {
+          return Boolean(userState?.isPinned);
+        }
+        return true;
+      }
+      return false;
     })
     .sort((a, b) => {
       const getUserState = (chat) =>
@@ -487,7 +486,7 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
         <div className="flex items-center justify-between mb-3.5">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-white tracking-tight">Chats</h2>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/25 text-purple-200">
               {filteredChats.length}
             </span>
           </div>
@@ -501,7 +500,7 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
             </button>
             <button
               onClick={() => setShowNewChat(true)}
-              className="p-2 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white shadow-md shadow-blue-500/25 border border-white/20 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="p-2 rounded-xl bg-gradient-to-tr from-[#7C3AED] to-[#8B5CF6] text-white shadow-md shadow-purple-600/30 border border-purple-400/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
               title="New Chat"
             >
               <FiPlus size={17} />
@@ -522,6 +521,28 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+
+        {/* Filter Tabs: All | Unread | Groups | Pinned (Screens 10 & 48) */}
+        <div className="flex items-center gap-1.5 mt-3 overflow-x-auto pb-0.5">
+          {[
+            { id: "all", label: "All" },
+            { id: "unread", label: "Unread" },
+            { id: "groups", label: "Groups" },
+            { id: "pinned", label: "Pinned" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setFilterTab(tab.id)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                filterTab === tab.id
+                  ? "bg-[#7C3AED] text-white shadow-md shadow-purple-600/35"
+                  : "bg-white/[0.05] hover:bg-white/[0.09] text-slate-300 border border-white/10"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -649,7 +670,7 @@ const RecentChat = ({ selectedUser, onSelectUser }) => {
                           className={`min-w-5 h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                             isMuted 
                               ? "bg-slate-700 text-slate-300" 
-                              : "bg-gradient-to-tr from-cyan-500 to-purple-600 text-white shadow-md shadow-cyan-500/30"
+                              : "bg-[#7C3AED] text-white shadow-md shadow-purple-600/35"
                           }`}
                         >
                           {unreadCount > 99 ? "99+" : unreadCount}
